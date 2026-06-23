@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
+$input = json_body();
 if (!$input || !isset($input['id']) || !isset($input['descripcion'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Faltan datos: id y descripcion']);

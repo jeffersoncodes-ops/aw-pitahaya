@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = json_body();
 
 if (!$data || empty($data['codigo_ubicacion']) || empty($data['accesion_id'])) {
     http_response_code(400);

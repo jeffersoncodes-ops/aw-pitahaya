@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = json_body();
 
 if (!$data || empty($data['codigo_accesion']) || empty($data['tecnico_id']) || empty($data['propietario_id'])) {
     http_response_code(400);
@@ -72,7 +72,7 @@ try {
         ':tipo_suelo'      => $data['tipo_suelo'] ?? null,
         ':tecnico_id'      => (int)$data['tecnico_id'],
         ':propietario_id'  => (int)$data['propietario_id'],
-        ':donante_id'      => $data['donante_id'] ? (int)$data['donante_id'] : null,
+        ':donante_id'      => isset($data['donante_id']) ? (int)$data['donante_id'] : null,
     ]);
 
     $id = $conn->lastInsertId();

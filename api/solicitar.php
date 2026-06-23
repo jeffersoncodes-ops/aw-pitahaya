@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = json_body();
 
 if (!$data || empty($data['nombre']) || empty($data['email']) || empty($data['items'])) {
     http_response_code(400);

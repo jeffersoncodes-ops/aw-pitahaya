@@ -15,6 +15,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+/**
+ * Obtener el body de la request como array asociativo.
+ * 
+ * AlwaysData elimina comillas dobles de JSON en POST (mod_security),
+ * por lo que esta función intenta reparar el JSON dañado.
+ */
+function json_body(): ?array {
+    $raw = trim(file_get_contents('php://input') ?: '');
+
+    // 1. Intentar JSON estándar
+    if ($raw) {
+        $data = json_decode($raw, true);
+        if (is_array($data)) return $data;
+
+        // 2. Reparar JSON dañado por AlwaysData: {key:val,key2:val2}
+        //    AlwaysData elimina comillas dobles de JSON.
+        //    Esta regex parsea correctamente incluso si los valores contienen comas.
+        $inner = trim($raw, "{}\t\n\r\0\x0B ");
+        if ($inner !== '') {
+            $result = [];
+            // key:value donde value puede tener comas internas (no seguidas de key:)
+            preg_match_all(
+                '/(\w[\w\d_-]*)\s*:\s*([^,]*+(?:,(?!\s*\w[\w\d_-]*\s*:)[^,]*)*+)/',
+                $inner,
+                $matches,
+                PREG_SET_ORDER
+            );
+            foreach ($matches as $m) {
+                $result[trim($m[1])] = trim($m[2]);
+            }
+            if (!empty($result)) return $result;
+        }
+    }
+
+    // 3. Fallback a form-urlencoded
+    return $_POST ?: null;
+}
+
 function env(string $key, mixed $default = null): mixed {
     // Check .env in same dir as www/ (AlwaysData) first, then project root (local dev)
     $paths = [__DIR__ . '/../.env', __DIR__ . '/../../.env'];
