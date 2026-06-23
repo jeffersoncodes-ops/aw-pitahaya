@@ -36,9 +36,7 @@ if (!$data || empty($data['nombre']) || empty($data['email']) || empty($data['it
 }
 
 try {
-    $conn->beginTransaction();
-
-    // Validar stock disponible para cada item solicitado
+    // Verificar stock
     $stockStmt = $conn->prepare("
         SELECT COALESCE(SUM(cantidad_disponible), 0) AS stock_total
         FROM inventario_almacen
@@ -51,7 +49,6 @@ try {
         $solicitado = (float) $item['cantidad'];
 
         if ($solicitado > $stockTotal) {
-            $conn->rollBack();
             http_response_code(400);
             echo json_encode([
                 'error' => "Stock insuficiente para la accesion ID {$item['accesion_id']}. "
@@ -85,7 +82,6 @@ try {
         VALUES (:solicitud_id, :accesion_id, :cantidad, :unidad)
     ");
 
-    // Mapa de normalizacion de unidades (plurales -> singulares aceptados por el CHECK)
     $unidadMap = [
         'unidades' => 'unidad',
         'kgs'      => 'kg',
@@ -98,7 +94,6 @@ try {
     foreach ($data['items'] as $item) {
         $rawUnidad = $item['unidad'] ?? 'kg';
         $normalized = $unidadMap[$rawUnidad] ?? $rawUnidad;
-
         $stmt->execute([
             'solicitud_id' => $solicitudId,
             'accesion_id'  => $item['accesion_id'],
@@ -107,9 +102,7 @@ try {
         ]);
     }
 
-    $conn->commit();
-
-    // Obtener numero de seguimiento generado
+    // Obtener numero de seguimiento
     $stmt = $conn->prepare("SELECT numero_seguimiento FROM solicitud WHERE id = :id");
     $stmt->execute(['id' => $solicitudId]);
     $solicitud = $stmt->fetch();
@@ -117,13 +110,10 @@ try {
     http_response_code(201);
     echo json_encode([
         'mensaje'            => 'Solicitud creada exitosamente',
-        'numero_seguimiento' => $solicitud['numero_seguimiento'],
+        'numero_seguimiento' => $solicitud ? $solicitud['numero_seguimiento'] : null,
         'solicitud_id'       => $solicitudId,
     ]);
 } catch (Throwable $e) {
-    if (isset($conn) && $conn->inTransaction()) {
-        $conn->rollBack();
-    }
     http_response_code(500);
     echo json_encode(['error' => 'Error interno del servidor']);
 }

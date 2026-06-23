@@ -21,6 +21,139 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
  * AlwaysData elimina comillas dobles de JSON en POST (mod_security),
  * por lo que esta función intenta reparar el JSON dañado.
  */
+/**
+ * Reconstruir un valor JSON al que AlwaysData le eliminó las comillas dobles,
+ * parseando recursivamente objetos/arrays anidados.
+ */
+function _parse_stripped_value(string $raw): mixed {
+    $raw = trim($raw);
+    if ($raw === '') return null;
+
+    // Array: [val,val,val] o [{...},{...}]
+    if ($raw[0] === '[') {
+        $inner = substr($raw, 1, -1);
+        $parts = _split_stripped_top_level($inner);
+        $arr = [];
+        foreach ($parts as $p) {
+            $arr[] = _parse_stripped_value($p);
+        }
+        return $arr;
+    }
+
+    // Objeto: {key:val,key:val}
+    if ($raw[0] === '{') {
+        $inner = substr($raw, 1, -1);
+        $pairs = _split_stripped_top_level($inner);
+        $obj = [];
+        foreach ($pairs as $pair) {
+            $pair = trim($pair);
+            $colon = strpos($pair, ':');
+            if ($colon !== false) {
+                $k = trim(substr($pair, 0, $colon));
+                $v = trim(substr($pair, $colon + 1));
+                $obj[$k] = _parse_stripped_value($v);
+            }
+        }
+        return $obj;
+    }
+
+    // Valor plano: intentar como número, booleano, o string
+    if (is_numeric($raw)) {
+        return str_contains($raw, '.') ? (float)$raw : (int)$raw;
+    }
+    if ($raw === 'true') return true;
+    if ($raw === 'false') return false;
+    if ($raw === 'null') return null;
+    return $raw;
+}
+
+/**
+ * Dividir un string por comas en el nivel superior (depth=0),
+ * respetando {}[] y strings.
+ */
+function _split_stripped_top_level(string $raw): array {
+    $raw = trim($raw);
+    if ($raw === '') return [];
+
+    $parts = [];
+    $buffer = '';
+    $depth = 0;
+    $len = strlen($raw);
+
+    for ($i = 0; $i < $len; $i++) {
+        $ch = $raw[$i];
+        if ($ch === '{' || $ch === '[') $depth++;
+        if ($ch === '}' || $ch === ']') $depth--;
+        if ($depth === 0 && $ch === ',') {
+            $parts[] = trim($buffer);
+            $buffer = '';
+        } else {
+            $buffer .= $ch;
+        }
+    }
+    if ($buffer !== '') {
+        $parts[] = trim($buffer);
+    }
+
+    return $parts;
+}
+
+/**
+ * Reconstruir un JSON al que AlwaysData le eliminó las comillas dobles.
+ */
+function _repair_stripped_json(string $raw): ?array {
+    $raw = trim($raw);
+    if ($raw === '') return null;
+
+    // Quitar {} envolventes si existen
+    if ($raw[0] === '{') {
+        $raw = substr($raw, 1, -1);
+    }
+    $raw = trim($raw);
+
+    $result = [];
+    $len = strlen($raw);
+    $i = 0;
+    $currentKey = null;
+    $buffer = '';
+    $depth = 0;
+
+    while ($i < $len) {
+        $ch = $raw[$i];
+
+        if ($ch === '{' || $ch === '[') $depth++;
+        if ($ch === '}' || $ch === ']') $depth--;
+
+        if ($depth === 0) {
+            if ($ch === ':') {
+                $currentKey = trim($buffer);
+                $buffer = '';
+                $i++;
+                continue;
+            }
+            if ($ch === ',') {
+                if ($currentKey !== null) {
+                    $result[$currentKey] = _parse_stripped_value(trim($buffer));
+                    $currentKey = null;
+                    $buffer = '';
+                }
+                $i++;
+                continue;
+            }
+        }
+
+        $buffer .= $ch;
+        $i++;
+    }
+
+    // Último par
+    if ($currentKey !== null) {
+        $result[$currentKey] = _parse_stripped_value(trim($buffer));
+    }
+
+    return !empty($result) ? $result : null;
+}
+
 function json_body(): ?array {
     $raw = trim(file_get_contents('php://input') ?: '');
 
@@ -29,24 +162,9 @@ function json_body(): ?array {
         $data = json_decode($raw, true);
         if (is_array($data)) return $data;
 
-        // 2. Reparar JSON dañado por AlwaysData: {key:val,key2:val2}
-        //    AlwaysData elimina comillas dobles de JSON.
-        //    Esta regex parsea correctamente incluso si los valores contienen comas.
-        $inner = trim($raw, "{}\t\n\r\0\x0B ");
-        if ($inner !== '') {
-            $result = [];
-            // key:value donde value puede tener comas internas (no seguidas de key:)
-            preg_match_all(
-                '/(\w[\w\d_-]*)\s*:\s*([^,]*+(?:,(?!\s*\w[\w\d_-]*\s*:)[^,]*)*+)/',
-                $inner,
-                $matches,
-                PREG_SET_ORDER
-            );
-            foreach ($matches as $m) {
-                $result[trim($m[1])] = trim($m[2]);
-            }
-            if (!empty($result)) return $result;
-        }
+        // 2. Reparar JSON dañado por AlwaysData (quita comillas dobles)
+        $data = _repair_stripped_json($raw);
+        if ($data !== null) return $data;
     }
 
     // 3. Fallback a form-urlencoded

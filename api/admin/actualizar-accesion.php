@@ -88,7 +88,7 @@ try {
         ':tipo_suelo'      => $data['tipo_suelo'] ?? null,
         ':tecnico_id'      => (int)$data['tecnico_id'],
         ':propietario_id'  => (int)$data['propietario_id'],
-        ':donante_id'      => $data['donante_id'] ? (int)$data['donante_id'] : null,
+        ':donante_id'      => isset($data['donante_id']) ? (int)$data['donante_id'] : null,
     ]);
 
     echo json_encode(['success' => true, 'id' => $data['id']]);
