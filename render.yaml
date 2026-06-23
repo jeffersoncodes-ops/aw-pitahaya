@@ -4,11 +4,10 @@
 services:
   - type: web
     name: aw-pitahaya-api
-    runtime: php
+    runtime: docker
     repo: https://github.com/jeffersoncodes-ops/aw-pitahaya
     rootDir: api
-    buildCommand: composer install --no-dev
-    startCommand: php -S 0.0.0.0:10000
+    dockerfilePath: Dockerfile
     healthCheckPath: /stats.php
     envVars:
       - key: APP_ENV
