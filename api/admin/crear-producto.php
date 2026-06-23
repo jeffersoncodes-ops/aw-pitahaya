@@ -39,5 +39,5 @@ try {
     echo json_encode(['success' => true, 'id' => $conn->lastInsertId()]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Error interno del servidor']);
+    echo json_encode(['error' => 'Error al crear producto: ' . $e->getMessage()]);
 }

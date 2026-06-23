@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  MenuItem,
 } from '@mui/material';
 import {
   type ProductoAdmin,
@@ -171,13 +172,21 @@ const AdminProductos = () => {
                 sx={{ minWidth: 240 }}
               />
               <TextField
+                select
                 label="Tipo"
                 value={prodForm.tipo}
                 onChange={(e) => setProdForm({ ...prodForm, tipo: e.target.value })}
                 size="small"
                 sx={{ minWidth: 160 }}
-                placeholder="pulpa, harina, aceite"
-              />
+              >
+                <MenuItem value="">— Ninguno —</MenuItem>
+                <MenuItem value="vino">Vino</MenuItem>
+                <MenuItem value="licor">Licor</MenuItem>
+                <MenuItem value="mermelada">Mermelada</MenuItem>
+                <MenuItem value="harina">Harina</MenuItem>
+                <MenuItem value="aceite">Aceite</MenuItem>
+                <MenuItem value="otro">Otro</MenuItem>
+              </TextField>
             </Box>
             <TextField
               label="Descripción"
