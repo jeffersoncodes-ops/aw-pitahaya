@@ -415,36 +415,46 @@ export function listarFotos(tipo?: string, id?: number): Promise<Foto[]> {
   return fetchJSON<Foto[]>(endpoint);
 }
 
-export function subirFoto(
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // result es "data:image/jpeg;base64,/9j/..." — extraemos solo la parte base64
+      const comma = result.indexOf(',');
+      resolve(comma !== -1 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(new Error('Error al leer el archivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
+export async function subirFoto(
   file: File,
   entidad_tipo: string,
   entidad_id: number,
   descripcion?: string,
 ): Promise<{ mensaje: string; id: number; url: string }> {
   const token = getToken();
-  if (!token) return Promise.reject(new Error('No autenticado'));
+  if (!token) throw new Error('No autenticado');
 
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('entidad_tipo', entidad_tipo);
-  formData.append('entidad_id', entidad_id.toString());
-  if (descripcion) formData.append('descripcion', descripcion);
+  const [base64, filename] = await Promise.all([
+    fileToBase64(file),
+    // Extraer extension del nombre original
+    Promise.resolve(file.name.replace(/^.*\./, '')),
+  ]);
 
-  return fetch(`${API_BASE}/subir-foto.php`, {
+  const ext = filename.toLowerCase();
+
+  return fetchAuthJSON<{ mensaje: string; id: number; url: string }>('subir-foto.php', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  }).then(async (res) => {
-    if (res.status === 401) {
-      localStorage.removeItem(STORAGE_KEYS.TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER);
-      window.location.href = '/admin';
-      throw new Error('Sesion expirada');
-    }
-    if (!res.ok) {
-      throw new Error(await extractResponseError(res));
-    }
-    return res.json();
+    body: JSON.stringify({
+      file: base64,
+      ext,
+      entidad_tipo,
+      entidad_id,
+      descripcion: descripcion ?? '',
+    }),
   });
 }
 
