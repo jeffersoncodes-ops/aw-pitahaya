@@ -8,33 +8,35 @@ import {
   TableRow,
   Paper,
   Chip,
-  CircularProgress,
   Box,
 } from '@mui/material';
 import { listarAccesiones, type AccesionResumen } from '../../services/api';
+import { useNotificar } from '../../components/Notificacion';
+import SkeletonRows from '../../components/SkeletonRows';
 
 const AccesionesTable = () => {
   const [data, setData] = useState<AccesionResumen[]>([]);
   const [loading, setLoading] = useState(true);
+  const { notificar } = useNotificar();
 
   useEffect(() => {
     listarAccesiones()
       .then(setData)
-      .catch(() => {})
+      .catch((err) => notificar(err instanceof Error ? err.message : 'Error al cargar accesiones', 'error'))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
+      <Box sx={{ py: 2 }}>
+        <SkeletonRows rows={5} columns={6} />
       </Box>
     );
   }
 
   return (
-    <TableContainer component={Paper} elevation={2}>
-      <Table>
+    <TableContainer component={Paper} elevation={2} sx={{ overflowX: 'auto', width: '100%' }}>
+      <Table sx={{ minWidth: { xs: 600, sm: '100%' } }}>
         <TableHead sx={{ bgcolor: 'primary.main' }}>
           <TableRow>
             <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Código</TableCell>

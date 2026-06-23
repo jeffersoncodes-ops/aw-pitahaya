@@ -5,9 +5,19 @@
  * Body: { id: number }
  */
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/jwt.php';
 
 header('Content-Type: application/json');
+
+$token = jwt_get_token();
+if (!$token) {
+    jwt_unauthorized();
+}
+$payload = jwt_verify($token);
+if (!$payload) {
+    jwt_unauthorized('Token invalido o expirado');
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -49,5 +59,5 @@ try {
     echo json_encode(['mensaje' => 'Foto eliminada']);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

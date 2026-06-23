@@ -10,10 +10,11 @@ import {
   TableRow,
   Paper,
   Chip,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import { misSolicitudes, type SolicitudItem } from '../../services/api';
+import SkeletonRows from '../../components/SkeletonRows';
+import EmptyState from '../../components/EmptyState';
 
 const STATUS_MAP: Record<
   string,
@@ -52,8 +53,8 @@ const AgricultorSolicitudes = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
+      <Box sx={{ py: 2 }}>
+        <SkeletonRows rows={5} columns={5} />
       </Box>
     );
   }
@@ -67,7 +68,12 @@ const AgricultorSolicitudes = () => {
   }
 
   if (solicitudes.length === 0) {
-    return <Alert severity="info">Aun no has realizado ninguna solicitud de semillas.</Alert>;
+    return (
+      <EmptyState
+        title="Sin solicitudes"
+        message="Aún no has realizado ninguna solicitud de semillas."
+      />
+    );
   }
 
   return (

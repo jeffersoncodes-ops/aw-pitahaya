@@ -22,7 +22,6 @@ const CuentaAgricultor = ({ onLoginSuccess }: CuentaAgricultorProps) => {
     email: '',
     password: '',
     telefono: '',
-    cedula: '',
     finca: '',
     direccion: '',
   });
@@ -156,7 +155,7 @@ const CuentaAgricultor = ({ onLoginSuccess }: CuentaAgricultorProps) => {
             required
             sx={{ mb: 2 }}
           />
-          <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>
+          <Button type="submit" variant="contained" color="secondary" fullWidth disabled={loading}>
             {loading ? 'Cargando...' : 'Ingresar'}
           </Button>
         </Box>
@@ -203,13 +202,6 @@ const CuentaAgricultor = ({ onLoginSuccess }: CuentaAgricultorProps) => {
             sx={{ mb: 2 }}
           />
           <TextField
-            label="Cedula"
-            value={reg.cedula}
-            onChange={(e) => setReg({ ...reg, cedula: e.target.value })}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-          <TextField
             label="Nombre de la finca"
             value={reg.finca}
             onChange={(e) => setReg({ ...reg, finca: e.target.value })}
@@ -225,7 +217,7 @@ const CuentaAgricultor = ({ onLoginSuccess }: CuentaAgricultorProps) => {
             rows={2}
             sx={{ mb: 2 }}
           />
-          <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>
+          <Button type="submit" variant="contained" color="secondary" fullWidth disabled={loading}>
             {loading ? 'Registrando...' : 'Crear cuenta'}
           </Button>
         </Box>

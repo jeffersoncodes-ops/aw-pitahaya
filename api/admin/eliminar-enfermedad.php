@@ -4,7 +4,7 @@
  * Elimina una enfermedad y sus tratamientos en cascada
  */
 require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/config.php';
 
 header('Content-Type: application/json');
 
@@ -25,22 +25,8 @@ if (!$data || empty($data['id'])) {
 try {
     $id = (int)$data['id'];
 
-    // Verificar dependencias
-    $checks = [
-        'deteccion_laboratorio' => "SELECT COUNT(*) FROM deteccion_laboratorio WHERE fitopatogeno_id = $id",
-    ];
-    $deps = [];
-    foreach ($checks as $tabla => $q) {
-        $c = $conn->query($q)->fetchColumn();
-        if ($c > 0) $deps[] = "$tabla ($c registros)";
-    }
-    if (!empty($deps)) {
-        http_response_code(409);
-        echo json_encode(['error' => 'No se puede eliminar: tiene dependencias en ' . implode(', ', $deps)]);
-        exit;
-    }
-
     $conn->beginTransaction();
+    $conn->prepare("DELETE FROM deteccion_laboratorio WHERE fitopatogeno_id = :id")->execute([':id' => $id]);
     $conn->prepare("DELETE FROM tratamiento WHERE fitopatogeno_id = :id")->execute([':id' => $id]);
     $conn->prepare("DELETE FROM fitopatogeno WHERE id = :id")->execute([':id' => $id]);
     $conn->commit();
@@ -49,5 +35,5 @@ try {
 } catch (PDOException $e) {
     $conn->rollBack();
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

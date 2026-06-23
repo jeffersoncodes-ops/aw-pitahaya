@@ -1,10 +1,10 @@
 <?php
 /**
  * POST /api/admin/eliminar-noticia.php
- * Elimina (desactiva) una noticia
+ * Elimina una noticia definitivamente
  */
 require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/config.php';
 
 header('Content-Type: application/json');
 
@@ -23,12 +23,11 @@ if (!$data || empty($data['id'])) {
 }
 
 try {
-    // Soft delete: desactivar en lugar de borrar
-    $stmt = $conn->prepare("UPDATE noticia SET activo = false WHERE id = :id");
+    $stmt = $conn->prepare("DELETE FROM noticia WHERE id = :id");
     $stmt->execute([':id' => (int)$data['id']]);
 
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

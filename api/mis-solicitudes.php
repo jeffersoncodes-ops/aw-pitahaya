@@ -4,8 +4,8 @@
  * Historial de solicitudes del agricultor autenticado (por email del JWT)
  */
 
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/jwt.php';
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/jwt.php';
 
 header('Content-Type: application/json');
 
@@ -52,5 +52,5 @@ try {
     echo json_encode($rows);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

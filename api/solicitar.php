@@ -17,7 +17,7 @@
  * }
  */
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/config.php';
 
 header('Content-Type: application/json');
 
@@ -37,6 +37,29 @@ if (!$data || empty($data['nombre']) || empty($data['email']) || empty($data['it
 
 try {
     $conn->beginTransaction();
+
+    // Validar stock disponible para cada item solicitado
+    $stockStmt = $conn->prepare("
+        SELECT COALESCE(SUM(cantidad_disponible), 0) AS stock_total
+        FROM inventario_almacen
+        WHERE accesion_id = :id AND cantidad_disponible > 0
+    ");
+
+    foreach ($data['items'] as $item) {
+        $stockStmt->execute(['id' => $item['accesion_id']]);
+        $stockTotal = (float) $stockStmt->fetchColumn();
+        $solicitado = (float) $item['cantidad'];
+
+        if ($solicitado > $stockTotal) {
+            $conn->rollBack();
+            http_response_code(400);
+            echo json_encode([
+                'error' => "Stock insuficiente para la accesion ID {$item['accesion_id']}. "
+                         . "Disponible: $stockTotal, solicitado: $solicitado",
+            ]);
+            exit;
+        }
+    }
 
     // Insertar solicitud
     $stmt = $conn->prepare("
@@ -62,12 +85,25 @@ try {
         VALUES (:solicitud_id, :accesion_id, :cantidad, :unidad)
     ");
 
+    // Mapa de normalizacion de unidades (plurales -> singulares aceptados por el CHECK)
+    $unidadMap = [
+        'unidades' => 'unidad',
+        'kgs'      => 'kg',
+        'lbs'      => 'lb',
+        'gramos'   => 'g',
+        'onzas'    => 'oz',
+        'libras'   => 'lb',
+    ];
+
     foreach ($data['items'] as $item) {
+        $rawUnidad = $item['unidad'] ?? 'kg';
+        $normalized = $unidadMap[$rawUnidad] ?? $rawUnidad;
+
         $stmt->execute([
             'solicitud_id' => $solicitudId,
             'accesion_id'  => $item['accesion_id'],
             'cantidad'     => $item['cantidad'],
-            'unidad'       => $item['unidad'] ?? 'kg',
+            'unidad'       => $normalized,
         ]);
     }
 
@@ -84,8 +120,10 @@ try {
         'numero_seguimiento' => $solicitud['numero_seguimiento'],
         'solicitud_id'       => $solicitudId,
     ]);
-} catch (PDOException $e) {
-    $conn->rollBack();
+} catch (Throwable $e) {
+    if (isset($conn) && $conn->inTransaction()) {
+        $conn->rollBack();
+    }
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

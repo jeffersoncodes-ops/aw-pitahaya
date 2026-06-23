@@ -1,10 +1,10 @@
 <?php
 /**
  * POST /api/admin/eliminar-accesion.php
- * Elimina una accesion (solo si no tiene dependencias)
+ * Elimina una accesion y todos sus datos asociados en cascada
  */
 require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/config.php';
 
 header('Content-Type: application/json');
 
@@ -25,32 +25,45 @@ if (!$data || empty($data['id'])) {
 try {
     $id = (int)$data['id'];
 
-    // Verificar que no tenga dependencias
-    $checks = [
-        'inventario_almacen' => "SELECT COUNT(*) FROM inventario_almacen WHERE accesion_id = $id",
-        'planta'             => "SELECT COUNT(*) FROM planta WHERE accesion_id = $id",
-        'detalle_solicitud'  => "SELECT COUNT(*) FROM detalle_solicitud WHERE accesion_id = $id",
-        'deteccion_laboratorio' => "SELECT COUNT(*) FROM deteccion_laboratorio WHERE accesion_id = $id",
-        'fotografia'         => "SELECT COUNT(*) FROM fotografia WHERE entidad_tipo = 'accesion' AND entidad_id = $id",
-    ];
+    $conn->beginTransaction();
 
-    $dependencias = [];
-    foreach ($checks as $tabla => $query) {
-        $count = $conn->query($query)->fetchColumn();
-        if ($count > 0) $dependencias[] = "$tabla ($count registros)";
-    }
-
-    if (!empty($dependencias)) {
-        http_response_code(409);
-        echo json_encode(['error' => 'No se puede eliminar: tiene dependencias en ' . implode(', ', $dependencias)]);
-        exit;
-    }
-
-    $stmt = $conn->prepare("DELETE FROM accesion WHERE id = :id");
+    // 1. Eliminar fotos (archivo fisico + registro)
+    $stmt = $conn->prepare("SELECT url FROM fotografia WHERE entidad_tipo = 'accesion' AND entidad_id = :id");
     $stmt->execute([':id' => $id]);
+    foreach ($stmt as $foto) {
+        $filePath = __DIR__ . '/../' . $foto['url'];
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+    }
+    $conn->prepare("DELETE FROM fotografia WHERE entidad_tipo = 'accesion' AND entidad_id = :id")->execute([':id' => $id]);
+
+    // 2. Eliminar evaluaciones (dependen de planta)
+    $conn->prepare("DELETE FROM evaluacion_sanidad      WHERE planta_id IN (SELECT id FROM planta WHERE accesion_id = :id)")->execute([':id' => $id]);
+    $conn->prepare("DELETE FROM evaluacion_fruto         WHERE planta_id IN (SELECT id FROM planta WHERE accesion_id = :id)")->execute([':id' => $id]);
+    $conn->prepare("DELETE FROM evaluacion_floral        WHERE planta_id IN (SELECT id FROM planta WHERE accesion_id = :id)")->execute([':id' => $id]);
+    $conn->prepare("DELETE FROM evaluacion_vegetativa   WHERE planta_id IN (SELECT id FROM planta WHERE accesion_id = :id)")->execute([':id' => $id]);
+
+    // 3. Eliminar plantas
+    $conn->prepare("DELETE FROM planta WHERE accesion_id = :id")->execute([':id' => $id]);
+
+    // 4. Eliminar detecciones de laboratorio
+    $conn->prepare("DELETE FROM deteccion_laboratorio WHERE accesion_id = :id")->execute([':id' => $id]);
+
+    // 5. Eliminar inventario
+    $conn->prepare("DELETE FROM inventario_almacen WHERE accesion_id = :id")->execute([':id' => $id]);
+
+    // 6. Eliminar detalles de solicitud (para no dejar items huerfanos)
+    $conn->prepare("DELETE FROM detalle_solicitud WHERE accesion_id = :id")->execute([':id' => $id]);
+
+    // 7. Eliminar la accesion
+    $conn->prepare("DELETE FROM accesion WHERE id = :id")->execute([':id' => $id]);
+
+    $conn->commit();
 
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
+    $conn->rollBack();
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

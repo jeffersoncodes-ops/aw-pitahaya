@@ -3,7 +3,7 @@
  * GET /api/noticias.php - Lista de noticias
  */
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/config.php';
 
 header('Content-Type: application/json');
 
@@ -21,5 +21,5 @@ try {
     echo json_encode($stmt->fetchAll());
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

@@ -10,7 +10,8 @@ import {
   TextField,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { subirFoto } from '../services/api';
+import { subirFoto } from '../../services/api';
+import { IMAGE_ACCEPT } from '../../config/constants';
 
 interface SubirFotoProps {
   entidadTipo: 'accesion' | 'enfermedad' | 'producto' | 'noticia';
@@ -65,7 +66,7 @@ const SubirFoto = ({ entidadTipo, entidadId, onSubida }: SubirFotoProps) => {
           <input
             type="file"
             hidden
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept={IMAGE_ACCEPT}
             onChange={handleFile}
           />
         </Button>

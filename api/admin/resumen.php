@@ -4,7 +4,7 @@
  */
 
 require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/config.php';
 
 try {
     $solicitudes = $conn->query("
@@ -33,7 +33,8 @@ try {
             (SELECT COUNT(*) FROM accesion) AS total_accesiones,
             (SELECT COUNT(*) FROM solicitud) AS total_solicitudes,
             (SELECT COUNT(*) FROM solicitud WHERE estado = 'pendiente') AS pendientes,
-            (SELECT COUNT(*) FROM fitopatogeno) AS total_enfermedades
+            (SELECT COUNT(*) FROM fitopatogeno) AS total_enfermedades,
+            (SELECT COUNT(*) FROM producto_procesado) AS total_productos
     ")->fetch();
 
     echo json_encode([
@@ -43,5 +44,5 @@ try {
     ]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

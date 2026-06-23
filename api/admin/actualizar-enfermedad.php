@@ -4,7 +4,7 @@
  * Actualiza una enfermedad y sus tratamientos (borra y reinserta)
  */
 require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/config.php';
 
 header('Content-Type: application/json');
 
@@ -69,5 +69,5 @@ try {
 } catch (PDOException $e) {
     $conn->rollBack();
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

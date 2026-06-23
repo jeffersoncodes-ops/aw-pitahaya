@@ -12,26 +12,38 @@ import {
   TableHead,
   TableRow,
   Paper,
-  CircularProgress,
 } from '@mui/material';
 import { listarEnfermedades, type Enfermedad } from '../../services/api';
+import { useNotificar } from '../../components/Notificacion';
+import SkeletonCards from '../../components/SkeletonCards';
+import EmptyState from '../../components/EmptyState';
 
 const EnfermedadesList = () => {
   const [data, setData] = useState<Enfermedad[]>([]);
   const [loading, setLoading] = useState(true);
+  const { notificar } = useNotificar();
 
   useEffect(() => {
     listarEnfermedades()
       .then(setData)
-      .catch(() => {})
+      .catch((err) => notificar(err instanceof Error ? err.message : 'Error al cargar enfermedades', 'error'))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
+      <Box sx={{ py: 4 }}>
+        <SkeletonCards count={3} />
       </Box>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <EmptyState
+        title="Sin enfermedades"
+        message="No hay enfermedades registradas aún."
+      />
     );
   }
 
@@ -64,7 +76,7 @@ const EnfermedadesList = () => {
                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }} gutterBottom>
                   Tratamientos:
                 </Typography>
-                <TableContainer component={Paper} variant="outlined">
+                <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
@@ -75,8 +87,8 @@ const EnfermedadesList = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {enf.tratamientos.map((t, i) => (
-                        <TableRow key={i}>
+                      {enf.tratamientos.map((t) => (
+                        <TableRow key={`${t.nombre}-${t.tipo}-${t.dosis}-${t.frecuencia}`}>
                           <TableCell>{t.nombre}</TableCell>
                           <TableCell>
                             <Chip label={t.tipo} size="small" variant="outlined" />

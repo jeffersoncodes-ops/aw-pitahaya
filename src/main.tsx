@@ -6,13 +6,16 @@ import CssBaseline from '@mui/material/CssBaseline';
 import './index.css';
 import theme from './theme';
 import App from './App.tsx';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <App />
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
       </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,

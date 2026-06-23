@@ -5,8 +5,8 @@
  * Body: { "nombre": "...", "email": "...", "password": "...", "telefono": "...", "cedula": "...", "finca": "...", "direccion": "..." }
  */
 
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/jwt.php';
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/jwt.php';
 
 header('Content-Type: application/json');
 

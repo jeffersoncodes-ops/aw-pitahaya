@@ -7,6 +7,7 @@ import {
   estaAutenticado,
   type UsuarioInfo,
 } from '../services/api';
+import { STORAGE_KEYS } from '../config/constants';
 
 interface AuthContextType {
   user: UsuarioInfo | null;
@@ -43,8 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginUser = async (email: string, password: string) => {
     const res = await apiLogin(email, password);
-    localStorage.setItem('auth_token', res.token);
-    localStorage.setItem('auth_user', JSON.stringify(res.usuario));
+    localStorage.setItem(STORAGE_KEYS.TOKEN, res.token);
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(res.usuario));
     setUser(res.usuario);
   };
 
@@ -58,8 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     direccion?: string;
   }) => {
     const res = await apiRegistro(data);
-    localStorage.setItem('auth_token', res.token);
-    localStorage.setItem('auth_user', JSON.stringify(res.usuario));
+    localStorage.setItem(STORAGE_KEYS.TOKEN, res.token);
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(res.usuario));
     setUser(res.usuario);
   };
 

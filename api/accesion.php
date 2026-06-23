@@ -4,7 +4,7 @@
  * Detalle completo de una accesion con evaluaciones
  */
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/config.php';
 
 header('Content-Type: application/json');
 
@@ -19,7 +19,7 @@ if (!$codigo) {
 try {
     // Datos de la accesion
     $stmt = $conn->prepare("
-        SELECT a.*,
+        SELECT a.id, a.codigo_accesion, a.cropname, a.accename, a.variedad, a.provincia, a.genus, a.species, a.latitude, a.longitude, a.elevation, a.instcode, a.collnumb, a.collcode, a.spauthor, a.subtaxa, a.acqdate, a.origcty, a.collsite, a.colldate, a.sampstat, a.collsrc, a.storage, a.remarks, a.tipo_suelo,
                t.nombre           AS tecnico,
                t.correo           AS correo_tecnico,
                p.nombre_productor AS propietario,
@@ -74,5 +74,5 @@ try {
     echo json_encode($accesion);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

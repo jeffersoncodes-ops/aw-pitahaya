@@ -1,30 +1,22 @@
-import { useState } from 'react';
-import { Container, Typography, Tabs, Tab, Box } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Container, Typography, Tabs, Tab } from '@mui/material';
 import AccesionesTable from './AccesionesTable';
 import EnfermedadesList from './EnfermedadesList';
 import ProductosGrid from './ProductosGrid';
 import Buscador from '../../components/Buscador';
 import SolicitarForm from './SolicitarForm';
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel({ children, value, index }: TabPanelProps) {
-  return (
-    <div role="tabpanel" hidden={value !== index}>
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+import CuentaAgricultor from './CuentaAgricultor';
+import TabPanel from '@/components/TabPanel';
 
 const Catalogos = () => {
   const [tab, setTab] = useState(0);
 
+  useEffect(() => {
+    document.title = 'Pitahaya — Catálogos';
+  }, []);
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }} className="fade-in-page">
       <Typography variant="h4" gutterBottom color="primary">
         Catálogos
       </Typography>
@@ -37,12 +29,14 @@ const Catalogos = () => {
         indicatorColor="secondary"
         variant="scrollable"
         scrollButtons="auto"
+        allowScrollButtonsMobile
       >
         <Tab label="Semillas" />
         <Tab label="Enfermedades" />
         <Tab label="Productos" />
         <Tab label="Buscar" />
         <Tab label="Solicitar" />
+        <Tab label="Mi Cuenta" />
       </Tabs>
 
       <TabPanel value={tab} index={0}>
@@ -59,6 +53,9 @@ const Catalogos = () => {
       </TabPanel>
       <TabPanel value={tab} index={4}>
         <SolicitarForm />
+      </TabPanel>
+      <TabPanel value={tab} index={5}>
+        <CuentaAgricultor />
       </TabPanel>
     </Container>
   );

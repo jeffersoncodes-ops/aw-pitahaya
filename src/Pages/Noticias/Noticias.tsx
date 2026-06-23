@@ -6,33 +6,40 @@ import {
   CardContent,
   Box,
   Chip,
-  CircularProgress,
 } from '@mui/material';
 import { listarNoticias, type Noticia } from '../../services/api';
+import { useNotificar } from '../../components/Notificacion';
+import SkeletonCards from '../../components/SkeletonCards';
+import EmptyState from '../../components/EmptyState';
 
 const Noticias = () => {
   const [noticias, setNoticias] = useState<Noticia[]>([]);
   const [loading, setLoading] = useState(true);
+  const { notificar } = useNotificar();
 
   useEffect(() => {
+    document.title = 'Pitahaya — Noticias';
     listarNoticias()
       .then(setNoticias)
-      .catch(() => {})
+      .catch((err) => notificar(err instanceof Error ? err.message : 'Error al cargar noticias', 'error'))
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4 }} className="fade-in-page">
       <Typography variant="h4" gutterBottom color="primary">
         Noticias y Bitácora
       </Typography>
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
+        <Box sx={{ py: 4 }}>
+          <SkeletonCards count={3} />
         </Box>
       ) : noticias.length === 0 ? (
-        <Typography color="text.secondary">No hay noticias aún.</Typography>
+        <EmptyState
+          title="Sin noticias"
+          message="No hay noticias publicadas aún."
+        />
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {noticias.map((n) => (

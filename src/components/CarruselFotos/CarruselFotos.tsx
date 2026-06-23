@@ -1,8 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { keyframes } from '@mui/material/styles';
 import { Box, Typography, IconButton, Skeleton, Chip } from '@mui/material';
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { listarFotos, type Foto } from '../services/api';
+import { listarFotos, type Foto } from '../../services/api';
+import { useNotificar } from '../Notificacion';
 
 interface CarruselFotosProps {
   titulo?: string;
@@ -18,11 +25,12 @@ const CarruselFotos = ({
   const [fotos, setFotos] = useState<Foto[]>([]);
   const [actual, setActual] = useState(0);
   const [loading, setLoading] = useState(true);
+  const { notificar } = useNotificar();
 
   useEffect(() => {
     listarFotos(entidadTipo)
       .then(setFotos)
-      .catch(() => {})
+      .catch((err) => notificar(err instanceof Error ? err.message : 'Error al cargar fotos', 'error'))
       .finally(() => setLoading(false));
   }, [entidadTipo]);
 
@@ -34,12 +42,15 @@ const CarruselFotos = ({
     setActual((a) => (a === fotos.length - 1 ? 0 : a + 1));
   }, [fotos.length]);
 
-  // Autoplay
+  const intervalRef = useRef<number>(undefined);
+
   useEffect(() => {
     if (fotos.length <= 1) return;
-    const id = setInterval(siguiente, autoplayInterval);
-    return () => clearInterval(id);
-  }, [fotos.length, autoplayInterval, siguiente]);
+    intervalRef.current = setInterval(() => {
+      setActual((prev) => (prev + 1) % fotos.length);
+    }, autoplayInterval);
+    return () => clearInterval(intervalRef.current);
+  }, [fotos.length, autoplayInterval]);
 
   if (loading) {
     return (
@@ -67,7 +78,7 @@ const CarruselFotos = ({
           position: 'relative',
           borderRadius: 3,
           overflow: 'hidden',
-          height: { xs: 250, sm: 350, md: 400 },
+          height: { xs: 180, sm: 240, md: 280 },
           bgcolor: '#1a1a1a',
         }}
       >
@@ -75,11 +86,12 @@ const CarruselFotos = ({
           component="img"
           src={`/${foto.url}`}
           alt={foto.descripcion || 'Foto'}
+          key={foto.id}
           sx={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            transition: 'opacity 0.5s',
+            animation: `${fadeIn} 0.6s ease`,
           }}
         />
 

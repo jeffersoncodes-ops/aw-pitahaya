@@ -1,10 +1,15 @@
+import { useEffect } from 'react';
 import { Container, Typography, Card, CardContent, Box, Button } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import CarruselFotos from '../../components/CarruselFotos';
 
 const Home = () => {
+  useEffect(() => {
+    document.title = 'Pitahaya — Inicio';
+  }, []);
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }} className="fade-in-page">
       {/* Hero */}
       <Box sx={{ textAlign: 'center', mb: 6, mt: 4 }}>
         <Typography variant="h3" color="primary" gutterBottom>
@@ -15,17 +20,19 @@ const Home = () => {
           transferencia tecnológica de pitahaya en Ecuador
         </Typography>
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-          <Button component={RouterLink} to="/catalogos" variant="contained" color="primary">
+          <Button component={RouterLink} to="/catalogos" variant="contained" color="secondary">
             Ver Catálogos
           </Button>
-          <Button component={RouterLink} to="/investigacion" variant="outlined" color="primary">
+          <Button component={RouterLink} to="/investigacion" variant="outlined" color="secondary">
             Datos de Investigación
           </Button>
         </Box>
       </Box>
 
-      {/* Carrusel */}
+      {/* Carruseles */}
       <CarruselFotos titulo="Galería de Accesiones" entidadTipo="accesion" />
+      <CarruselFotos titulo="Galería de Productos" entidadTipo="producto" />
+      <CarruselFotos titulo="Galería de Enfermedades" entidadTipo="enfermedad" />
 
       {/* Cards de navegacion */}
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
@@ -52,7 +59,7 @@ const Home = () => {
               to="/catalogos"
               size="small"
               variant="contained"
-              color="primary"
+              color="secondary"
             >
               Ir a Catálogos
             </Button>
@@ -72,7 +79,7 @@ const Home = () => {
               to="/investigacion"
               size="small"
               variant="contained"
-              color="primary"
+              color="secondary"
             >
               Ir a Investigación
             </Button>
@@ -92,7 +99,7 @@ const Home = () => {
               to="/noticias"
               size="small"
               variant="contained"
-              color="primary"
+              color="secondary"
             >
               Ver Noticias
             </Button>

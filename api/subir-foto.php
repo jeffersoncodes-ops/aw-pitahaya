@@ -5,9 +5,19 @@
  * multipart/form-data: file, entidad_tipo, entidad_id, descripcion (opcional)
  */
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/jwt.php';
 
 header('Content-Type: application/json');
+
+$token = jwt_get_token();
+if (!$token) {
+    jwt_unauthorized();
+}
+$payload = jwt_verify($token);
+if (!$payload) {
+    jwt_unauthorized('Token invalido o expirado');
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -107,5 +117,5 @@ try {
     // Si falla la DB, borramos el archivo subido
     unlink($destPath);
     http_response_code(500);
-    echo json_encode(['error' => 'Error al guardar en base de datos: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

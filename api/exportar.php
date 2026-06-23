@@ -6,7 +6,7 @@
  * Tipos soportados: accesiones, detecciones, enfermedades, productos
  */
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/config.php';
 
 $tipo = $_GET['tipo'] ?? '';
 
@@ -135,5 +135,5 @@ try {
 } catch (PDOException $e) {
     http_response_code(500);
     header('Content-Type: application/json');
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

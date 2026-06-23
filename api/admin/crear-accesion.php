@@ -4,7 +4,7 @@
  * Crea una nueva accesion
  */
 require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/config.php';
 
 header('Content-Type: application/json');
 
@@ -80,5 +80,5 @@ try {
     echo json_encode(['success' => true, 'id' => $id, 'codigo_accesion' => $data['codigo_accesion']]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
 }

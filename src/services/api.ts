@@ -1,7 +1,8 @@
-const API_BASE = '/api';
+import { API_BASE, STORAGE_KEYS } from '../config/constants';
+import { extractResponseError } from './errors';
 
 function getToken(): string | null {
-  return localStorage.getItem('auth_token');
+  return localStorage.getItem(STORAGE_KEYS.TOKEN);
 }
 
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -11,8 +12,7 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `Error ${res.status}`);
+    throw new Error(await extractResponseError(res));
   }
 
   return res.json();
@@ -31,104 +31,57 @@ async function fetchAuthJSON<T>(endpoint: string, options?: RequestInit): Promis
   });
 
   if (res.status === 401) {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER);
     window.location.href = '/admin';
     throw new Error('Sesion expirada');
   }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `Error ${res.status}`);
+    throw new Error(await extractResponseError(res));
   }
 
   return res.json();
 }
 
-// -- Tipos --
+// -- Tipos importados desde src/types/ --
 
-export interface AccesionResumen {
+import type {
+  AccesionResumen, DetalleAccesion, PlantaConEvaluaciones, CrearAccesionData, BusquedaResultado,
+} from '../types/accesion';
+import type {
+  Enfermedad, Tratamiento, Deteccion, DeteccionInvestigacion, EnfermedadAdmin, TratamientoAdmin, EnfermedadResumen,
+} from '../types/enfermedad';
+import type { Noticia, NoticiaAdmin } from '../types/noticia';
+import type { ProductoAdmin, ProductoResumen } from '../types/producto';
+import type { SolicitudAdmin, SolicitudItem } from '../types/solicitud';
+import type { InventarioItem } from '../types/inventario';
+
+export interface InventarioDisponible {
   id: number;
+  codigo_ubicacion: string;
+  cantidad_disponible: number;
+  unidad: string;
+  accesion_id: number;
+  nombre_variedad: string;
   codigo_accesion: string;
-  cropname: string;
-  accename: string;
-  variedad: string;
-  provincia: string;
-  genus: string;
-  species: string;
-  latitude: string;
-  longitude: string;
-  elevation: number;
-  tecnico: string;
-  propietario: string;
 }
+import type { AdminResumen, StatsPublicas } from '../types/admin';
+import type { UsuarioInfo, LoginResponse, Tecnico, Propietario, Donante } from '../types/auth';
+import type { Foto } from '../types/foto';
 
-export interface Tratamiento {
-  nombre: string;
-  tipo: string;
-  descripcion: string;
-  dosis: string;
-  frecuencia: string;
-}
-
-export interface Enfermedad {
-  id: number;
-  nombre_cientifico: string;
-  nombre_comun: string;
-  tipo: string;
-  sintomas: string;
-  tratamientos: Tratamiento[] | null;
-}
-
-export interface DetalleAccesion extends AccesionResumen {
-  id: number;
-  instcode: string;
-  collnumb: string;
-  collcode: string;
-  spauthor: string | null;
-  subtaxa: string | null;
-  acqdate: string;
-  origcty: string;
-  collsite: string;
-  elevation: number;
-  colldate: string;
-  sampstat: string;
-  collsrc: string;
-  storage: string;
-  remarks: string;
-  tipo_suelo: string;
-  correo_tecnico: string;
-  donante: string | null;
-  plantas: PlantaConEvaluaciones[];
-  detecciones: Deteccion[];
-}
-
-export interface PlantaConEvaluaciones {
-  codigo_planta: string;
-  evaluaciones: {
-    vegetativa: Record<string, unknown> | null;
-    floral: Record<string, unknown> | null;
-    fruto: Record<string, unknown> | null;
-    sanidad: Record<string, unknown> | null;
-  };
-}
-
-export interface Deteccion {
-  enfermedad: string;
-  nivel_incidencia: string;
-  metodo_deteccion: string;
-  fecha_deteccion: string;
-  provincia: string;
-}
-
-export interface BusquedaResultado {
-  codigo_accesion: string;
-  accename: string;
-  cropname: string;
-  provincia: string;
-  variedad: string;
-  relevancia: number;
-}
+// Re-exportar todos los tipos para compatibilidad con consumidores existentes
+export type {
+  AccesionResumen, DetalleAccesion, PlantaConEvaluaciones, CrearAccesionData, BusquedaResultado,
+  Enfermedad, Tratamiento, Deteccion, DeteccionInvestigacion, EnfermedadAdmin, TratamientoAdmin, EnfermedadResumen,
+  Noticia, NoticiaAdmin,
+  ProductoAdmin, ProductoResumen,
+  SolicitudAdmin, SolicitudItem,
+  InventarioItem,
+  AdminResumen, StatsPublicas,
+  UsuarioInfo, LoginResponse, Tecnico, Propietario, Donante,
+  Foto,
+};
 
 // -- Endpoints --
 
@@ -142,28 +95,6 @@ export function detalleAccesion(codigo: string): Promise<DetalleAccesion> {
 
 // -- Admin: Accesiones CRUD --
 
-export interface Tecnico {
-  id: number;
-  nombre: string;
-  correo: string | null;
-  cargo: string | null;
-}
-
-export interface Propietario {
-  id: number;
-  nombre_productor: string;
-  cedula: string | null;
-  celular: string | null;
-  nombre_finca: string | null;
-}
-
-export interface Donante {
-  id: number;
-  institucion: string | null;
-  nombre: string | null;
-  numero_accesion: string | null;
-}
-
 export function listarTecnicos(): Promise<Tecnico[]> {
   return fetchAuthJSON<Tecnico[]>('admin/tecnicos.php');
 }
@@ -174,34 +105,6 @@ export function listarPropietarios(): Promise<Propietario[]> {
 
 export function listarDonantes(): Promise<Donante[]> {
   return fetchAuthJSON<Donante[]>('admin/donantes.php');
-}
-
-export interface CrearAccesionData {
-  codigo_accesion: string;
-  cropname?: string;
-  accename?: string;
-  variedad?: string;
-  provincia?: string;
-  genus?: string;
-  species?: string;
-  latitude?: number;
-  longitude?: number;
-  elevation?: number;
-  tecnico_id: number;
-  propietario_id: number;
-  donante_id?: number;
-  acqdate?: string;
-  colldate?: string;
-  collsite?: string;
-  origcty?: string;
-  tipo_suelo?: string;
-  collnumb?: string;
-  collcode?: string;
-  instcode?: string;
-  remarks?: string;
-  sampstat?: string;
-  collsrc?: string;
-  storage?: string;
 }
 
 export function crearAccesion(
@@ -229,6 +132,10 @@ export function eliminarAccesion(id: number): Promise<{ success: boolean }> {
   });
 }
 
+export function listarDetecciones(): Promise<DeteccionInvestigacion[]> {
+  return fetchJSON<DeteccionInvestigacion[]>('detecciones.php');
+}
+
 export function listarEnfermedades(): Promise<Enfermedad[]> {
   return fetchJSON<Enfermedad[]>('enfermedades.php');
 }
@@ -237,24 +144,11 @@ export function buscar(termino: string): Promise<BusquedaResultado[]> {
   return fetchJSON<BusquedaResultado[]>(`buscar.php?q=${encodeURIComponent(termino)}`);
 }
 
-export interface Noticia {
-  id: number;
-  titulo: string;
-  contenido: string;
-  foto_url: string | null;
-  fecha: string;
-  autor: string;
-}
-
 export function listarNoticias(): Promise<Noticia[]> {
   return fetchJSON<Noticia[]>('noticias.php');
 }
 
 // -- Admin: Noticias CRUD --
-
-export interface NoticiaAdmin extends Noticia {
-  activo: boolean;
-}
 
 export function listarNoticiasAdmin(): Promise<NoticiaAdmin[]> {
   return fetchAuthJSON<NoticiaAdmin[]>('admin/noticias.php');
@@ -291,25 +185,6 @@ export function eliminarNoticia(id: number): Promise<{ success: boolean }> {
 }
 
 // -- Admin: Enfermedades CRUD --
-
-export interface TratamientoAdmin {
-  id?: number;
-  nombre_tratamiento: string;
-  tipo_tratamiento?: string;
-  descripcion?: string;
-  dosis?: string;
-  frecuencia?: string;
-}
-
-export interface EnfermedadAdmin {
-  id: number;
-  nombre_cientifico: string;
-  nombre_comun: string | null;
-  tipo: string | null;
-  sintomas: string | null;
-  condiciones_propagacion: string | null;
-  tratamientos: TratamientoAdmin[];
-}
 
 export function listarEnfermedadesAdmin(): Promise<EnfermedadAdmin[]> {
   return fetchAuthJSON<EnfermedadAdmin[]>('admin/enfermedades.php');
@@ -353,16 +228,6 @@ export function eliminarEnfermedad(id: number): Promise<{ success: boolean }> {
 
 // -- Admin: Productos CRUD --
 
-export interface ProductoAdmin {
-  id: number;
-  nombre: string;
-  tipo: string | null;
-  descripcion: string | null;
-  proceso_obtencion: string | null;
-  ingredientes: string | null;
-  fotografia_url: string | null;
-}
-
 export function crearProducto(data: {
   nombre: string;
   tipo?: string;
@@ -399,57 +264,8 @@ export function eliminarProducto(id: number): Promise<{ success: boolean }> {
   });
 }
 
-export interface StatsPublicas {
-  total_accesiones: number;
-  total_enfermedades: number;
-  total_productos: number;
-  total_noticias: number;
-}
-
 export function statsPublicas(): Promise<StatsPublicas> {
   return fetchJSON<StatsPublicas>('stats.php');
-}
-
-export interface AdminResumen {
-  solicitudes: {
-    id: number;
-    numero_seguimiento: string;
-    solicitante_nombre: string;
-    solicitante_email: string;
-    estado: string;
-    fecha: string;
-    items: number;
-  }[];
-  inventario: {
-    id: number;
-    accesion_id: number;
-    codigo_ubicacion: string;
-    cantidad_disponible: number;
-    unidad: string | null;
-    codigo_accesion: string;
-    cropname: string;
-    variedad: string;
-  }[];
-  totals: {
-    total_accesiones: number;
-    total_solicitudes: number;
-    pendientes: number;
-    total_enfermedades: number;
-  };
-}
-
-// -- Inventario --
-export interface InventarioItem {
-  id: number;
-  accesion_id: number;
-  codigo_ubicacion: string;
-  cantidad_disponible: number;
-  unidad?: string | null;
-  fecha_ingreso?: string | null;
-  fecha_actualizacion?: string | null;
-  codigo_accesion: string;
-  cropname: string;
-  variedad: string;
 }
 
 export function listarInventario(): Promise<InventarioItem[]> {
@@ -498,22 +314,6 @@ export function eliminarSolicitud(id: number): Promise<{ mensaje: string }> {
 
 // -- Auth --
 
-export interface UsuarioInfo {
-  id: number;
-  nombre: string;
-  email: string;
-  rol: string;
-  telefono?: string;
-  cedula?: string;
-  finca?: string;
-  direccion?: string;
-}
-
-export interface LoginResponse {
-  token: string;
-  usuario: UsuarioInfo;
-}
-
 export function login(email: string, password: string): Promise<LoginResponse> {
   return fetchJSON<LoginResponse>('login.php', {
     method: 'POST',
@@ -537,35 +337,20 @@ export function registro(data: {
 }
 
 export function estaAutenticado(): boolean {
-  return !!localStorage.getItem('auth_token');
+  return !!localStorage.getItem(STORAGE_KEYS.TOKEN);
 }
 
 export function getUsuario(): UsuarioInfo | null {
-  const raw = localStorage.getItem('auth_user');
+  const raw = localStorage.getItem(STORAGE_KEYS.USER);
   return raw ? JSON.parse(raw) : null;
 }
 
 export function logout(): void {
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('auth_user');
+  localStorage.removeItem(STORAGE_KEYS.TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.USER);
 }
 
 // -- Admin --
-
-export interface SolicitudAdmin {
-  id: number;
-  numero_seguimiento: string;
-  solicitante_nombre: string;
-  solicitante_email: string;
-  solicitante_telefono: string;
-  solicitante_cedula: string;
-  solicitante_finca: string;
-  estado: string;
-  fecha: string;
-  atendido_por: string | null;
-  observaciones: string;
-  items: { codigo: string; cropname: string; cantidad: number }[];
-}
 
 export function listarSolicitudesAdmin(): Promise<SolicitudAdmin[]> {
   return fetchAuthJSON<SolicitudAdmin[]>('admin/solicitudes.php');
@@ -601,13 +386,8 @@ export function solicitarSemillas(data: {
   });
 }
 
-export interface SolicitudItem {
-  id: number;
-  numero_seguimiento: string;
-  estado: string;
-  fecha: string;
-  observaciones: string;
-  items: { codigo: string; cropname: string; cantidad: number; unidad: string }[];
+export function listarInventarioDisponible(): Promise<InventarioDisponible[]> {
+  return fetchJSON<InventarioDisponible[]>('inventario-disponible.php');
 }
 
 export function misSolicitudes(): Promise<SolicitudItem[]> {
@@ -616,25 +396,8 @@ export function misSolicitudes(): Promise<SolicitudItem[]> {
 
 // -- Enfermedades y Productos (para selector de fotos) --
 
-export interface EnfermedadResumen {
-  id: number;
-  nombre_cientifico: string;
-  nombre_comun: string;
-  tipo: string;
-}
-
 export function listarEnfermedadesResumen(): Promise<EnfermedadResumen[]> {
   return fetchJSON<EnfermedadResumen[]>('enfermedades.php');
-}
-
-export interface ProductoResumen {
-  id: number;
-  nombre: string;
-  tipo: string | null;
-  descripcion: string | null;
-  proceso_obtencion: string | null;
-  ingredientes: string | null;
-  fotografia_url: string | null;
 }
 
 export function listarProductos(): Promise<ProductoResumen[]> {
@@ -642,16 +405,6 @@ export function listarProductos(): Promise<ProductoResumen[]> {
 }
 
 // -- Fotos --
-
-export interface Foto {
-  id: number;
-  entidad_tipo: string;
-  entidad_id: number;
-  url: string;
-  descripcion: string | null;
-  es_principal: boolean;
-  creado_en: string;
-}
 
 export function listarFotos(tipo?: string, id?: number): Promise<Foto[]> {
   let endpoint = 'fotos.php';
@@ -668,6 +421,9 @@ export function subirFoto(
   entidad_id: number,
   descripcion?: string,
 ): Promise<{ mensaje: string; id: number; url: string }> {
+  const token = getToken();
+  if (!token) return Promise.reject(new Error('No autenticado'));
+
   const formData = new FormData();
   formData.append('file', file);
   formData.append('entidad_tipo', entidad_tipo);
@@ -676,25 +432,31 @@ export function subirFoto(
 
   return fetch(`${API_BASE}/subir-foto.php`, {
     method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
     body: formData,
   }).then(async (res) => {
+    if (res.status === 401) {
+      localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      window.location.href = '/admin';
+      throw new Error('Sesion expirada');
+    }
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(err.error || `Error ${res.status}`);
+      throw new Error(await extractResponseError(res));
     }
     return res.json();
   });
 }
 
 export function actualizarFoto(id: number, descripcion: string): Promise<{ mensaje: string }> {
-  return fetchJSON('actualizar-foto.php', {
+  return fetchAuthJSON('actualizar-foto.php', {
     method: 'POST',
     body: JSON.stringify({ id, descripcion }),
   });
 }
 
 export function eliminarFoto(id: number): Promise<{ mensaje: string }> {
-  return fetchJSON('eliminar-foto.php', {
+  return fetchAuthJSON('eliminar-foto.php', {
     method: 'POST',
     body: JSON.stringify({ id }),
   });

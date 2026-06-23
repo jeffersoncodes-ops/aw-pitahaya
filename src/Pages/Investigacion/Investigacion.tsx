@@ -13,71 +13,55 @@ import {
   TableHead,
   TableRow,
   Paper,
-  CircularProgress,
   Tabs,
   Tab,
   Button,
   Alert,
 } from '@mui/material';
-import { listarAccesiones, type AccesionResumen } from '../../services/api';
+import { listarAccesiones, listarDetecciones, type AccesionResumen, type DeteccionInvestigacion } from '../../services/api';
 import Buscador from '../../components/Buscador';
-
-interface Deteccion {
-  id: number;
-  codigo_accesion: string;
-  enfermedad: string;
-  nivel_incidencia: string;
-  metodo_deteccion: string;
-  fecha_deteccion: string;
-  provincia: string;
-  variedad: string;
-}
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel({ children, value, index }: TabPanelProps) {
-  return (
-    <div role="tabpanel" hidden={value !== index}>
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-}
+import TabPanel from '@/components/TabPanel';
+import { useNotificar } from '../../components/Notificacion';
+import { extractApiError } from '../../services/errors';
+import SkeletonCards from '../../components/SkeletonCards';
+import EmptyState from '../../components/EmptyState';
 
 const Investigacion = () => {
   const [tab, setTab] = useState(0);
   const [accesiones, setAccesiones] = useState<AccesionResumen[]>([]);
-  const [detecciones, setDetecciones] = useState<Deteccion[]>([]);
+  const [detecciones, setDetecciones] = useState<DeteccionInvestigacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [descargando, setDescargando] = useState<string | null>(null);
 
+  const { notificar } = useNotificar();
+
   useEffect(() => {
+    document.title = 'Pitahaya — Investigación';
     Promise.all([
       listarAccesiones(),
-      fetch('/api/detecciones.php')
-        .then((r) => r.json())
-        .catch(() => []),
+      listarDetecciones().catch((err) => {
+        notificar(extractApiError(err), 'error');
+        return [] as DeteccionInvestigacion[];
+      }),
     ])
       .then(([acc, det]) => {
         setAccesiones(acc);
         setDetecciones(det);
       })
+      .catch((err) => notificar(extractApiError(err), 'error'))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress />
+      <Box sx={{ py: 4 }} className="fade-in-page">
+        <SkeletonCards count={3} />
       </Box>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }} className="fade-in-page">
       <Typography variant="h4" gutterBottom color="primary">
         Datos de Investigación
       </Typography>
@@ -85,6 +69,9 @@ const Investigacion = () => {
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
+        variant="scrollable"
+        scrollButtons="auto"
+        allowScrollButtonsMobile
         sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
         textColor="secondary"
         indicatorColor="secondary"
@@ -97,8 +84,8 @@ const Investigacion = () => {
 
       {/* TAB 1: Detecciones */}
       <TabPanel value={tab} index={0}>
-        <TableContainer component={Paper} elevation={2}>
-          <Table>
+        <TableContainer component={Paper} elevation={2} sx={{ overflowX: 'auto', width: '100%' }}>
+          <Table sx={{ minWidth: { xs: 700, sm: '100%' } }}>
             <TableHead sx={{ bgcolor: 'primary.main' }}>
               <TableRow>
                 <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Enfermedad</TableCell>
@@ -113,8 +100,11 @@ const Investigacion = () => {
             <TableBody>
               {detecciones.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    Sin detecciones registradas
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    <EmptyState
+                      title="Sin detecciones"
+                      message="No hay detecciones registradas aún."
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -260,7 +250,7 @@ const Investigacion = () => {
                 </Typography>
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#2E7D32' }}
+                  color="secondary"
                   disabled={descargando !== null}
                   onClick={() => {
                     setDescargando('detecciones');
@@ -286,7 +276,7 @@ const Investigacion = () => {
                 </Typography>
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#1565C0' }}
+                  color="secondary"
                   disabled={descargando !== null}
                   onClick={() => {
                     setDescargando('enfermedades');
@@ -313,7 +303,7 @@ const Investigacion = () => {
                 </Typography>
                 <Button
                   variant="contained"
-                  sx={{ bgcolor: '#E65100' }}
+                  color="secondary"
                   disabled={descargando !== null}
                   onClick={() => {
                     setDescargando('productos');

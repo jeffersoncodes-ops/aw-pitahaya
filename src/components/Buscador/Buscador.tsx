@@ -12,16 +12,18 @@ import {
   Box,
 } from '@mui/material';
 import { buscar, type BusquedaResultado } from '../../services/api';
+import { useNotificar } from '../Notificacion';
 
 const Buscador = () => {
   const [termino, setTermino] = useState('');
   const [resultados, setResultados] = useState<BusquedaResultado[]>([]);
+  const { notificar } = useNotificar();
 
   const handleBuscar = () => {
     if (!termino.trim()) return;
     buscar(termino)
       .then(setResultados)
-      .catch(() => {});
+      .catch((err) => notificar(err instanceof Error ? err.message : 'Error al realizar la búsqueda', 'error'));
   };
 
   return (

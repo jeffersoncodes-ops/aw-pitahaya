@@ -1,12 +1,12 @@
 import { Box, Typography, Button, TableHead, TableRow, TableCell } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 
-// ─── Botón primario (púrpura) ───
 interface PrimaryBtnProps {
   children: React.ReactNode;
   onClick: () => void;
   size?: 'small' | 'medium' | 'large';
   variant?: 'contained' | 'outlined';
-  sx?: object;
+  sx?: SxProps<Theme>;
 }
 
 export const PrimaryButton = ({
@@ -21,7 +21,6 @@ export const PrimaryButton = ({
   </Button>
 );
 
-// ─── Encabezado de sección (título + botones) ───
 interface SectionHeaderProps {
   title: string;
   children?: React.ReactNode;
@@ -36,7 +35,6 @@ export const SectionHeader = ({ title, children }: SectionHeaderProps) => (
   </Box>
 );
 
-// ─── Fila de encabezado de tabla (púrpura) ───
 interface ColDef {
   label: string;
 }
@@ -53,7 +51,6 @@ export const StyledTableHead = ({ columns }: { columns: ColDef[] }) => (
   </TableHead>
 );
 
-// ─── Par de botones Editar / Eliminar ───
 interface ActionBtnsProps {
   onEdit: () => void;
   onDelete: () => void;
@@ -70,7 +67,6 @@ export const EditDeleteActions = ({ onEdit, onDelete }: ActionBtnsProps) => (
   </Box>
 );
 
-// ─── Botón de pestana (toggle entre dos estados) ───
 interface TabBtnProps {
   active: boolean;
   children: React.ReactNode;
