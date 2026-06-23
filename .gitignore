@@ -32,5 +32,8 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Package manager lock (Cloudflare CI builds from scratch)
+pnpm-lock.yaml
+
 # Composer
 vendor/
