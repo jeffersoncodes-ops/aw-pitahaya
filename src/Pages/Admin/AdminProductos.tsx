@@ -31,6 +31,7 @@ const AdminProductos = () => {
   const [prodAdmin, setProdAdmin] = useState<ProductoAdmin[]>([]);
   const [prodDialogOpen, setProdDialogOpen] = useState(false);
   const [editProdId, setEditProdId] = useState<number | null>(null);
+  const [viewProd, setViewProd] = useState<ProductoAdmin | null>(null);
   const [prodForm, setProdForm] = useState({
     nombre: '',
     tipo: '',
@@ -75,6 +76,8 @@ const AdminProductos = () => {
     setProdDialogOpen(true);
   };
 
+  const abrirVerProducto = (p: ProductoAdmin) => setViewProd(p);
+
   const guardarProducto = async () => {
     if (!prodForm.nombre) {
       notificar('Completa el nombre del producto', 'warning');
@@ -106,7 +109,12 @@ const AdminProductos = () => {
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {prodAdmin.map((p) => (
-            <Paper key={p.id} variant="outlined" sx={{ p: 2 }}>
+            <Paper
+              key={p.id}
+              variant="outlined"
+              sx={{ p: 2, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+              onClick={() => abrirVerProducto(p)}
+            >
               <Box
                 sx={{
                   display: 'flex',
@@ -226,6 +234,57 @@ const AdminProductos = () => {
           <PrimaryButton onClick={guardarProducto}>
             {editProdId ? 'Actualizar' : 'Crear'}
           </PrimaryButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de detalle */}
+      <Dialog
+        open={!!viewProd}
+        onClose={() => setViewProd(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{viewProd?.nombre}</DialogTitle>
+        <DialogContent>
+          {viewProd && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+              {viewProd.tipo && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Tipo</Typography>
+                  <Chip label={viewProd.tipo} size="small" />
+                </Box>
+              )}
+              {viewProd.descripcion && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Descripción</Typography>
+                  <Typography variant="body2">{viewProd.descripcion}</Typography>
+                </Box>
+              )}
+              {viewProd.ingredientes && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Ingredientes</Typography>
+                  <Typography variant="body2">{viewProd.ingredientes}</Typography>
+                </Box>
+              )}
+              {viewProd.proceso_obtencion && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Proceso de obtención</Typography>
+                  <Typography variant="body2">{viewProd.proceso_obtencion}</Typography>
+                </Box>
+              )}
+              {viewProd.fotografia_url && (
+                <Box
+                  component="img"
+                  src={viewProd.fotografia_url}
+                  alt={viewProd.nombre}
+                  sx={{ maxWidth: '100%', maxHeight: 300, borderRadius: 1, objectFit: 'cover' }}
+                />
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewProd(null)}>Cerrar</Button>
         </DialogActions>
       </Dialog>
     </>
