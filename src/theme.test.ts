@@ -3,25 +3,25 @@ import theme from './theme';
 
 describe('Theme — Línea Gráfica Pitahaya', () => {
   it('has green primary palette', () => {
-    expect(theme.palette.primary.main).toBe('#2E7D32');
-    expect(theme.palette.primary.light).toBe('#4CAF50');
-    expect(theme.palette.primary.dark).toBe('#1B5E20');
+    expect(theme.palette.primary.main).toBe('#1B5E20');
+    expect(theme.palette.primary.light).toBe('#2E7D32');
+    expect(theme.palette.primary.dark).toBe('#0D3B0F');
   });
 
   it('has red secondary palette', () => {
-    expect(theme.palette.secondary.main).toBe('#D32F2F');
-    expect(theme.palette.secondary.light).toBe('#EF5350');
-    expect(theme.palette.secondary.dark).toBe('#B71C1C');
+    expect(theme.palette.secondary.main).toBe('#C62828');
+    expect(theme.palette.secondary.light).toBe('#D32F2F');
+    expect(theme.palette.secondary.dark).toBe('#8E0000');
   });
 
-  it('has white background default', () => {
-    expect(theme.palette.background.default).toBe('#FFFFFF');
+  it('has off-white background default', () => {
+    expect(theme.palette.background.default).toBe('#F8FAF5');
   });
 
   it('preserves typography settings', () => {
-    expect(theme.typography.h3?.fontWeight).toBe(700);
+    expect(theme.typography.h3?.fontWeight).toBe(800);
     expect(theme.typography.h4?.fontWeight).toBe(700);
-    expect(theme.typography.h5?.fontWeight).toBe(600);
+    expect(theme.typography.h5?.fontWeight).toBe(700);
     expect(theme.typography.h6?.fontWeight).toBe(600);
   });
 
@@ -39,7 +39,7 @@ describe('Theme — Línea Gráfica Pitahaya', () => {
       >
     )?.root as Record<string, unknown> | undefined;
     expect(buttonOverrides?.textTransform).toBe('none');
-    expect(buttonOverrides?.borderRadius).toBe(8);
+    expect(buttonOverrides?.borderRadius).toBe(10);
 
     // MuiTableCell styleOverrides
     const cellOverrides = (

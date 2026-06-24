@@ -9,18 +9,18 @@ describe('Index CSS — Línea Gráfica Pitahaya', () => {
     expect(style.backgroundImage).toBe('none');
   });
 
-  it(':root background-color is white', () => {
+  it(':root background-color is off-white', () => {
     const style = getComputedStyle(document.documentElement);
-    expect(style.backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(style.backgroundColor).toBe('rgb(248, 250, 245)');
   });
 
-  it('.content-wrapper has opaque white background', () => {
+  it('.content-wrapper has transparent background (wraps page content)', () => {
     const wrapper = document.createElement('div');
     wrapper.className = 'content-wrapper';
     document.body.appendChild(wrapper);
 
     const style = getComputedStyle(wrapper);
-    expect(style.backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(style.backgroundColor).toBe('rgba(0, 0, 0, 0)');
 
     document.body.removeChild(wrapper);
   });
@@ -54,6 +54,6 @@ describe('Index CSS — Línea Gráfica Pitahaya', () => {
     expect(cssText).toContain('fadeIn');
     expect(cssText).toContain('.fade-in-page');
     expect(cssText).toContain('opacity: 0');
-    expect(cssText).toContain('translateY(4px)');
+    expect(cssText).toContain('translateY(8px)');
   });
 });

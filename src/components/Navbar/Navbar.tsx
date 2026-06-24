@@ -11,6 +11,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
+import Typography from '@mui/material/Typography';
 import { styled, useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -20,12 +21,13 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import pitahayaRoja from '../../assets/navbar/pitahaya-roja.png';
 
 const NavButton = styled(Button)({
-  mx: 1,
+  mx: 0.5,
   color: 'white',
-  borderColor: 'rgba(255, 255, 255, 0.5)',
+  borderColor: 'rgba(255, 255, 255, 0.35)',
+  borderRadius: 8,
   '&:hover': {
     borderColor: 'white',
-    bgcolor: 'rgba(255, 255, 255, 0.1)',
+    bgcolor: 'rgba(255, 255, 255, 0.12)',
   },
 }) as typeof Button;
 
@@ -90,20 +92,47 @@ const Navbar = ({ isAuth, userName, userRol, onLogout }: NavbarProps) => {
 
   return (
     <AppBar
-      position="static"
+      position="sticky"
       sx={{
-        bgcolor: 'primary.main',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        bgcolor: 'rgba(27,94,32,0.92)',
+        backdropFilter: 'blur(16px)',
+        boxShadow: '0 2px 20px rgba(0,0,0,0.12)',
       }}
     >
-      <Toolbar sx={{ minHeight: { xs: 56, md: 64 }, justifyContent: { md: 'center' } }}>
-        {/* Logo */}
+      <Toolbar sx={{ minHeight: { xs: 60, md: 68 } }}>
+        {/* Logo + Brand */}
         <Box
-          component="img"
-          src={pitahayaRoja}
-          alt="Pitahaya roja"
-          sx={{ height: { xs: 40, md: 56 }, mr: { xs: 'auto', md: 3 }, borderRadius: 1 }}
-        />
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            textDecoration: 'none',
+            gap: 1.5,
+            mr: { xs: 'auto', md: 4 },
+          }}
+        >
+          <Box
+            component="img"
+            src={pitahayaRoja}
+            alt="Pitahaya"
+            sx={{ height: { xs: 38, md: 48 }, borderRadius: 1 }}
+          />
+          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+            <Typography
+              variant="subtitle1"
+              sx={{ color: 'white', fontWeight: 700, lineHeight: 1.2, fontSize: { xs: '0.9rem', md: '1.05rem' } }}
+            >
+              Pitahaya
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ color: 'rgba(255,255,255,0.7)', display: { xs: 'none', md: 'block' }, lineHeight: 1.2 }}
+            >
+              Biodiversidad Ecuador
+            </Typography>
+          </Box>
+        </Box>
 
         {isMobile ? (
           <>
@@ -125,14 +154,22 @@ const Navbar = ({ isAuth, userName, userRol, onLogout }: NavbarProps) => {
               onClose={() => setDrawerOpen(false)}
               slotProps={{ backdrop: { sx: { bgcolor: 'rgba(0,0,0,0.4)' } } }}
             >
-              <Box sx={{ width: 280, bgcolor: 'primary.main', height: '100%', color: 'white' }}>
+              <Box sx={{ width: 280, bgcolor: 'primary.dark', height: '100%', color: 'white' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1.5 }}>
                   <Box
                     component="img"
                     src={pitahayaRoja}
-                    alt="Pitahaya roja"
-                    sx={{ height: 40, mr: 1, borderRadius: 1 }}
+                    alt="Pitahaya"
+                    sx={{ height: 36, mr: 1.5, borderRadius: 1 }}
                   />
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2, color: 'white' }}>
+                      Pitahaya
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.2 }}>
+                      Biodiversidad Ecuador
+                    </Typography>
+                  </Box>
                   <Box sx={{ flex: 1 }} />
                   <IconButton color="inherit" onClick={() => setDrawerOpen(false)}>
                     <CloseIcon />

@@ -33,39 +33,38 @@ describe('Home — Línea Gráfica Pitahaya', () => {
 
   it('has CTA button "Ver Catálogos" with secondary color', () => {
     renderWithProviders();
-    const btn = screen.getByRole('link', { name: 'Ver Catálogos' });
+    const btn = screen.getByRole('link', { name: /Ver Catálogos/ });
     expect(btn).toBeInTheDocument();
     // MUI applies MuiButton-colorSecondary class when color="secondary"
     expect(btn.className).toContain('MuiButton-colorSecondary');
     expect(btn.className).not.toContain('MuiButton-colorPrimary');
   });
 
-  it('has CTA button "Datos de Investigación" with secondary color (outlined)', () => {
+  it('has CTA button "Datos de Investigación" as outlined variant', () => {
     renderWithProviders();
-    const btn = screen.getByRole('link', { name: 'Datos de Investigación' });
+    const btn = screen.getByRole('link', { name: /Datos de Investigación/ });
     expect(btn).toBeInTheDocument();
-    expect(btn.className).toContain('MuiButton-colorSecondary');
-    expect(btn.className).not.toContain('MuiButton-colorPrimary');
+    expect(btn.className).toContain('MuiButton-outlined');
   });
 
   it('has card CTA "Ir a Catálogos" with secondary color', () => {
     renderWithProviders();
-    const btn = screen.getByRole('link', { name: 'Ir a Catálogos' });
+    const btn = screen.getByRole('link', { name: /Ir a Catálogos/ });
     expect(btn).toBeInTheDocument();
     expect(btn.className).toContain('MuiButton-colorSecondary');
   });
 
-  it('has card CTA "Ir a Investigación" with secondary color', () => {
+  it('has card CTA "Ir a Investigación" with primary color', () => {
     renderWithProviders();
-    const btn = screen.getByRole('link', { name: 'Ir a Investigación' });
+    const btn = screen.getByRole('link', { name: /Ir a Investigación/ });
     expect(btn).toBeInTheDocument();
-    expect(btn.className).toContain('MuiButton-colorSecondary');
+    expect(btn.className).toContain('MuiButton-colorPrimary');
   });
 
-  it('has card CTA "Ver Noticias" with secondary color', () => {
+  it('has card CTA "Ver Noticias" as contained button', () => {
     renderWithProviders();
-    const btn = screen.getByRole('link', { name: 'Ver Noticias' });
+    const btn = screen.getByRole('link', { name: /Ver Noticias/ });
     expect(btn).toBeInTheDocument();
-    expect(btn.className).toContain('MuiButton-colorSecondary');
+    expect(btn.className).toContain('MuiButton-contained');
   });
 });
