@@ -90,7 +90,7 @@ const CarruselFotos = ({
             width: '100%',
             height: '100%',
             backgroundImage: `url(${getImageUrl(foto.url)})`,
-            backgroundSize: 'cover',
+            backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             bgcolor: '#1a1a1a',

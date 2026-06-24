@@ -102,7 +102,7 @@ const AdminFotos = () => {
                       borderRadius: 1,
                       bgcolor: '#1a1a1a',
                       backgroundImage: `url(${getImageUrl(f.url)})`,
-                      backgroundSize: 'cover',
+                      backgroundSize: 'contain',
                       backgroundPosition: 'center',
                       backgroundRepeat: 'no-repeat',
                     }}
@@ -272,7 +272,7 @@ const AdminFotos = () => {
                           borderRadius: 1,
                           bgcolor: '#1a1a1a',
                           backgroundImage: `url(${getImageUrl(f.url)})`,
-                          backgroundSize: 'cover',
+                          backgroundSize: 'contain',
                           backgroundPosition: 'center',
                           backgroundRepeat: 'no-repeat',
                         }}
