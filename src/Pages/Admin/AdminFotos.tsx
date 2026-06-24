@@ -27,6 +27,7 @@ import {
   EditDeleteActions,
 } from '../../components/AdminUI';
 import { useNotificar } from '../../components/Notificacion';
+import { getImageUrl } from '../../config/constants';
 
 const AdminFotos = () => {
   const { notificar } = useNotificar();
@@ -95,7 +96,7 @@ const AdminFotos = () => {
               {todasFotos.map((f) => (
                 <Paper key={f.id} variant="outlined" sx={{ width: 200, p: 1 }}>
                   <img
-                    src={`/${f.url}`}
+                    src={getImageUrl(f.url)}
                     alt={f.descripcion || ''}
                     style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 4 }}
                   />
@@ -258,7 +259,7 @@ const AdminFotos = () => {
                   {fotosSubidas.map((f) => (
                     <Paper key={f.id} variant="outlined" sx={{ width: 180, p: 1 }}>
                       <img
-                        src={`/${f.url}`}
+                        src={getImageUrl(f.url)}
                         alt={f.descripcion || ''}
                         style={{
                           width: '100%',

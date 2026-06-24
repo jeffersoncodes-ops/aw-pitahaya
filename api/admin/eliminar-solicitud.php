@@ -25,6 +25,34 @@ if (!$data || empty($data['id'])) {
 try {
     $conn->beginTransaction();
 
+    // Restaurar stock antes de eliminar
+    $detStmt = $conn->prepare("
+        SELECT accesion_id, cantidad FROM detalle_solicitud WHERE solicitud_id = :id
+    ");
+    $detStmt->execute(['id' => (int)$data['id']]);
+    $items = $detStmt->fetchAll();
+
+    $restoreStmt = $conn->prepare("
+        UPDATE inventario_almacen
+        SET cantidad_disponible = cantidad_disponible + :cantidad
+        WHERE id = :id
+    ");
+    foreach ($items as $item) {
+        $rowsStmt = $conn->prepare("
+            SELECT id FROM inventario_almacen
+            WHERE accesion_id = :aid AND cantidad_disponible > 0
+            ORDER BY id ASC LIMIT 1
+        ");
+        $rowsStmt->execute(['aid' => $item['accesion_id']]);
+        $row = $rowsStmt->fetch();
+        if ($row) {
+            $restoreStmt->execute([
+                'cantidad' => $item['cantidad'],
+                'id'       => $row['id'],
+            ]);
+        }
+    }
+
     // Eliminar detalles primero (FK)
     $stmt = $conn->prepare("DELETE FROM detalle_solicitud WHERE solicitud_id = :id");
     $stmt->execute(['id' => (int)$data['id']]);

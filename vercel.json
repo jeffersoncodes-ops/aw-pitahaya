@@ -4,6 +4,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm ci",
+  "env": {
+    "VITE_API_URL": "https://jefferson.alwaysdata.net"
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

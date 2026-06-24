@@ -10,6 +10,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { listarFotos, type Foto } from '../../services/api';
 import { useNotificar } from '../Notificacion';
+import { getImageUrl } from '../../config/constants';
 
 interface CarruselFotosProps {
   titulo?: string;
@@ -84,7 +85,7 @@ const CarruselFotos = ({
       >
         <Box
           component="img"
-          src={`/${foto.url}`}
+          src={getImageUrl(foto.url)}
           alt={foto.descripcion || 'Foto'}
           key={foto.id}
           sx={{

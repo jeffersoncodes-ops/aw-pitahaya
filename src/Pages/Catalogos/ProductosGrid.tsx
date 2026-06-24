@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { listarProductos, type ProductoResumen } from '../../services/api';
 import { useNotificar } from '../../components/Notificacion';
+import { getImageUrl } from '../../config/constants';
 import SkeletonCards from '../../components/SkeletonCards';
 import EmptyState from '../../components/EmptyState';
 
@@ -54,7 +55,7 @@ const ProductosGrid = () => {
               <CardMedia
                 component="img"
                 height="180"
-                image={p.fotografia_url.startsWith('http') ? p.fotografia_url : `/${p.fotografia_url}`}
+                image={getImageUrl(p.fotografia_url)}
                 alt={p.nombre}
                 sx={{ objectFit: 'cover' }}
               />
@@ -89,7 +90,7 @@ const ProductosGrid = () => {
               {verProd.fotografia_url && (
                 <Box
                   component="img"
-                  src={verProd.fotografia_url.startsWith('http') ? verProd.fotografia_url : `/${verProd.fotografia_url}`}
+                  src={getImageUrl(verProd.fotografia_url)}
                   alt={verProd.nombre}
                   sx={{ width: '100%', maxHeight: 300, objectFit: 'cover', borderRadius: 1 }}
                 />

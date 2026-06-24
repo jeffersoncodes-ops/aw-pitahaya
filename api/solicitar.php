@@ -36,19 +36,36 @@ if (!$data || empty($data['nombre']) || empty($data['email']) || empty($data['it
 }
 
 try {
-    // Verificar stock
-    $stockStmt = $conn->prepare("
-        SELECT COALESCE(SUM(cantidad_disponible), 0) AS stock_total
-        FROM inventario_almacen
+    $conn->beginTransaction();
+
+    // ========================================
+    // 1. Verificar stock Y descontar (multi-fila)
+    // ========================================
+    $stockCheckStmt = $conn->prepare("
+        SELECT id, cantidad_disponible FROM inventario_almacen
         WHERE accesion_id = :id AND cantidad_disponible > 0
+        ORDER BY id ASC
+    ");
+    $deductStmt = $conn->prepare("
+        UPDATE inventario_almacen
+        SET cantidad_disponible = cantidad_disponible - :cantidad
+        WHERE id = :id
     ");
 
     foreach ($data['items'] as $item) {
-        $stockStmt->execute(['id' => $item['accesion_id']]);
-        $stockTotal = (float) $stockStmt->fetchColumn();
+        $stockCheckStmt->execute(['id' => $item['accesion_id']]);
+        $rows = $stockCheckStmt->fetchAll();
+
+        // Calcular stock total
+        $stockTotal = 0;
+        foreach ($rows as $r) {
+            $stockTotal += (float) $r['cantidad_disponible'];
+        }
+
         $solicitado = (float) $item['cantidad'];
 
         if ($solicitado > $stockTotal) {
+            $conn->rollBack();
             http_response_code(400);
             echo json_encode([
                 'error' => "Stock insuficiente para la accesion ID {$item['accesion_id']}. "
@@ -56,9 +73,20 @@ try {
             ]);
             exit;
         }
+
+        // Descontar de una o varias filas hasta cubrir la cantidad
+        $remaining = $solicitado;
+        foreach ($rows as $r) {
+            if ($remaining <= 0) break;
+            $take = min($remaining, (float) $r['cantidad_disponible']);
+            $deductStmt->execute(['cantidad' => $take, 'id' => $r['id']]);
+            $remaining -= $take;
+        }
     }
 
-    // Insertar solicitud
+    // ========================================
+    // 2. Insertar solicitud
+    // ========================================
     $stmt = $conn->prepare("
         INSERT INTO solicitud (solicitante_nombre, solicitante_email,
                                solicitante_telefono, solicitante_cedula,
@@ -76,7 +104,9 @@ try {
 
     $solicitudId = $conn->lastInsertId();
 
-    // Insertar items
+    // ========================================
+    // 3. Insertar items (detalle_solicitud)
+    // ========================================
     $stmt = $conn->prepare("
         INSERT INTO detalle_solicitud (solicitud_id, accesion_id, cantidad, unidad)
         VALUES (:solicitud_id, :accesion_id, :cantidad, :unidad)
@@ -102,6 +132,8 @@ try {
         ]);
     }
 
+    $conn->commit();
+
     // Obtener numero de seguimiento
     $stmt = $conn->prepare("SELECT numero_seguimiento FROM solicitud WHERE id = :id");
     $stmt->execute(['id' => $solicitudId]);
@@ -114,6 +146,7 @@ try {
         'solicitud_id'       => $solicitudId,
     ]);
 } catch (Throwable $e) {
+    if ($conn->inTransaction()) $conn->rollBack();
     http_response_code(500);
     echo json_encode(['error' => 'Error interno del servidor']);
 }

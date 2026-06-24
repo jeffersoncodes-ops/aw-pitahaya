@@ -32,40 +32,43 @@ if (!in_array($data['estado'], $estadosValidos)) {
 try {
     $conn->beginTransaction();
 
-    // Si se aprueba, descontar stock del inventario
-    if ($data['estado'] === 'aprobada') {
-        // Obtener items de la solicitud
-        $detStmt = $conn->prepare("
-            SELECT accesion_id, cantidad FROM detalle_solicitud WHERE solicitud_id = :id
-        ");
-        $detStmt->execute(['id' => $data['id']]);
-        $items = $detStmt->fetchAll();
+    // Obtener items de la solicitud (necesarios para stock)
+    $detStmt = $conn->prepare("
+        SELECT accesion_id, cantidad FROM detalle_solicitud WHERE solicitud_id = :id
+    ");
+    $detStmt->execute(['id' => $data['id']]);
+    $items = $detStmt->fetchAll();
 
-        $updateStmt = $conn->prepare("
+    if ($data['estado'] === 'rechazada') {
+        // Restaurar stock (el descuento ya se hizo en solicitar.php)
+        $restoreStmt = $conn->prepare("
             UPDATE inventario_almacen
-            SET cantidad_disponible = cantidad_disponible - :cantidad
-            WHERE id = (
-                SELECT id FROM inventario_almacen
-                WHERE accesion_id = :id AND cantidad_disponible >= :cantidad
-                LIMIT 1
-            )
+            SET cantidad_disponible = cantidad_disponible + :cantidad
+            WHERE id = :id
         ");
-
         foreach ($items as $item) {
-            $updateStmt->execute([
-                'cantidad' => $item['cantidad'],
-                'id'       => $item['accesion_id'],
-            ]);
-            if ($updateStmt->rowCount() === 0) {
-                $conn->rollBack();
-                http_response_code(400);
-                echo json_encode([
-                    'error' => "Stock insuficiente para la accesion ID {$item['accesion_id']}",
+            // Buscar filas con cantidad_disponible < original para reponer
+            $rowsStmt = $conn->prepare("
+                SELECT id, cantidad_disponible FROM inventario_almacen
+                WHERE accesion_id = :aid
+                ORDER BY id ASC
+            ");
+            $rowsStmt->execute(['aid' => $item['accesion_id']]);
+            $rows = $rowsStmt->fetchAll();
+
+            // Reponer en orden inverso (primero las últimas filas que se descontaron)
+            // Simplemente sumamos a la primera fila disponible
+            if (!empty($rows)) {
+                $restoreStmt->execute([
+                    'cantidad' => $item['cantidad'],
+                    'id'       => $rows[0]['id'],
                 ]);
-                exit;
             }
         }
     }
+
+    // Nota: Cuando se aprueba, el stock YA se descontó en solicitar.php.
+    // Solo actualizamos el estado.
 
     // Actualizar estado de la solicitud
     $stmt = $conn->prepare("
