@@ -1,31 +1,31 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { keyframes } from '@mui/material/styles';
-import { Box, Typography, IconButton, Skeleton, Chip } from '@mui/material';
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
-`;
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Skeleton,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Card,
+  CardContent,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { listarFotos, type Foto } from '../../services/api';
 import { useNotificar } from '../Notificacion';
 import { getImageUrl } from '../../config/constants';
 
-interface CarruselFotosProps {
+interface GaleriaGridProps {
   titulo?: string;
   entidadTipo?: string;
-  autoplayInterval?: number;
 }
 
-const CarruselFotos = ({
+const GaleriaGrid = ({
   titulo = 'Galería',
   entidadTipo,
-  autoplayInterval = 4000,
-}: CarruselFotosProps) => {
+}: GaleriaGridProps) => {
   const [fotos, setFotos] = useState<Foto[]>([]);
-  const [actual, setActual] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Foto | null>(null);
   const { notificar } = useNotificar();
 
   useEffect(() => {
@@ -35,38 +35,22 @@ const CarruselFotos = ({
       .finally(() => setLoading(false));
   }, [entidadTipo]);
 
-  const anterior = useCallback(() => {
-    setActual((a) => (a === 0 ? fotos.length - 1 : a - 1));
-  }, [fotos.length]);
-
-  const siguiente = useCallback(() => {
-    setActual((a) => (a === fotos.length - 1 ? 0 : a + 1));
-  }, [fotos.length]);
-
-  const intervalRef = useRef<number>(undefined);
-
-  useEffect(() => {
-    if (fotos.length <= 1) return;
-    intervalRef.current = setInterval(() => {
-      setActual((prev) => (prev + 1) % fotos.length);
-    }, autoplayInterval);
-    return () => clearInterval(intervalRef.current);
-  }, [fotos.length, autoplayInterval]);
-
   if (loading) {
     return (
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
           {titulo}
         </Typography>
-        <Skeleton variant="rounded" height={300} />
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 2 }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} variant="rounded" height={200} />
+          ))}
+        </Box>
       </Box>
     );
   }
 
   if (fotos.length === 0) return null;
-
-  const foto = fotos[actual];
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -76,119 +60,132 @@ const CarruselFotos = ({
 
       <Box
         sx={{
-          position: 'relative',
-          borderRadius: 3,
-          overflow: 'hidden',
-          aspectRatio: '16/9',
-          maxHeight: 400,
-          bgcolor: '#1a1a1a',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+          gap: 2,
         }}
       >
-        <Box
-          key={foto.id}
-          sx={{
-            width: '100%',
-            height: '100%',
-            backgroundImage: `url(${getImageUrl(foto.url)})`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            bgcolor: '#1a1a1a',
-            animation: `${fadeIn} 0.6s ease`,
-          }}
-        />
-
-        {foto.descripcion && (
-          <Box
+        {fotos.map((foto) => (
+          <Card
+            key={foto.id}
+            elevation={2}
             sx={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              p: 2,
-              background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+              borderRadius: 2,
+              overflow: 'hidden',
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.03)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+              },
             }}
+            onClick={() => setSelected(foto)}
           >
-            <Typography color="white" variant="body2">
-              {foto.descripcion}
-            </Typography>
-          </Box>
-        )}
-
-        {fotos.length > 1 && (
-          <>
-            <IconButton
-              onClick={anterior}
-              sx={{
-                position: 'absolute',
-                left: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                bgcolor: 'rgba(0,0,0,0.4)',
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
-              }}
-            >
-              <ChevronLeftIcon />
-            </IconButton>
-            <IconButton
-              onClick={siguiente}
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                bgcolor: 'rgba(0,0,0,0.4)',
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
-              }}
-            >
-              <ChevronRightIcon />
-            </IconButton>
-
             <Box
               sx={{
-                position: 'absolute',
-                bottom: 8,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                display: 'flex',
-                gap: 1,
+                width: '100%',
+                height: 200,
+                bgcolor: '#1a1a1a',
+                overflow: 'hidden',
               }}
             >
-              {fotos.map((_, i) => (
-                <Box
-                  key={i}
-                  onClick={() => setActual(i)}
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: i === actual ? 'white' : 'rgba(255,255,255,0.4)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s',
-                  }}
-                />
-              ))}
+              <Box
+                component="img"
+                src={getImageUrl(foto.url)}
+                alt={foto.descripcion || `${titulo} ${foto.id}`}
+                loading="lazy"
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
             </Box>
+            {foto.descripcion && (
+              <CardContent sx={{ py: 1, px: 1.5, '&:last-child': { pb: 1 } }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    display: 'block',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {foto.descripcion}
+                </Typography>
+              </CardContent>
+            )}
+          </Card>
+        ))}
+      </Box>
 
-            <Chip
-              label={`${actual + 1} / ${fotos.length}`}
-              size="small"
+      {/* Lightbox / Vista completa */}
+      <Dialog
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        maxWidth="lg"
+        slotProps={{
+          paper: {
+            sx: {
+              bgcolor: 'rgba(0,0,0,0.92)',
+              borderRadius: 3,
+              overflow: 'hidden',
+              position: 'relative',
+            },
+          },
+        }}
+      >
+        <IconButton
+          onClick={() => setSelected(null)}
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            color: 'white',
+            bgcolor: 'rgba(0,0,0,0.5)',
+            zIndex: 1,
+            '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+        <DialogContent
+          sx={{
+            p: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: 300,
+          }}
+        >
+          {selected && (
+            <Box
+              component="img"
+              src={getImageUrl(selected.url)}
+              alt={selected.descripcion || 'Foto'}
               sx={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
-                bgcolor: 'rgba(0,0,0,0.5)',
-                color: 'white',
-                fontWeight: 'bold',
+                maxWidth: '100%',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+                display: 'block',
               }}
             />
-          </>
+          )}
+        </DialogContent>
+        {selected?.descripcion && (
+          <Typography
+            variant="body2"
+            sx={{ p: 2, textAlign: 'center', color: 'rgba(255,255,255,0.8)' }}
+          >
+            {selected.descripcion}
+          </Typography>
         )}
-      </Box>
+      </Dialog>
     </Box>
   );
 };
 
-export default CarruselFotos;
+export default GaleriaGrid;

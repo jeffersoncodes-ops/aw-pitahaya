@@ -92,25 +92,35 @@ const AdminFotos = () => {
           {todasFotos.length === 0 ? (
             <Typography color="text.secondary">No hay fotos subidas aún.</Typography>
           ) : (
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 2 }}>
               {todasFotos.map((f) => (
-                <Paper key={f.id} variant="outlined" sx={{ width: 200, p: 1 }}>
+                <Paper key={f.id} variant="outlined" sx={{ overflow: 'hidden' }}>
                   <Box
                     sx={{
                       width: '100%',
-                      aspectRatio: '4/3',
-                      borderRadius: 1,
+                      height: 180,
                       bgcolor: '#1a1a1a',
-                      backgroundImage: `url(${getImageUrl(f.url)})`,
-                      backgroundSize: 'contain',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
+                      overflow: 'hidden',
                     }}
-                  />
+                  >
+                    <Box
+                      component="img"
+                      src={getImageUrl(f.url)}
+                      alt={f.descripcion || 'Foto'}
+                      loading="lazy"
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  </Box>
+                  <Box sx={{ p: 1 }}>
                   <Typography
                     variant="caption"
                     color="text.secondary"
-                    sx={{ display: 'block', mt: 0.5 }}
+                    sx={{ display: 'block' }}
                   >
                     <strong>{f.entidad_tipo}</strong> ID {f.entidad_id}
                   </Typography>
@@ -166,6 +176,7 @@ const AdminFotos = () => {
                       />
                     </Box>
                   )}
+                  </Box>
                 </Paper>
               ))}
             </Box>
@@ -262,23 +273,33 @@ const AdminFotos = () => {
                 }}
               />
               {fotosSubidas.length > 0 && (
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 2, mt: 2 }}>
                   {fotosSubidas.map((f) => (
-                    <Paper key={f.id} variant="outlined" sx={{ width: 180, p: 1 }}>
+                    <Paper key={f.id} variant="outlined" sx={{ overflow: 'hidden' }}>
                       <Box
                         sx={{
                           width: '100%',
-                          aspectRatio: '4/3',
-                          borderRadius: 1,
+                          height: 180,
                           bgcolor: '#1a1a1a',
-                          backgroundImage: `url(${getImageUrl(f.url)})`,
-                          backgroundSize: 'contain',
-                          backgroundPosition: 'center',
-                          backgroundRepeat: 'no-repeat',
+                          overflow: 'hidden',
                         }}
-                      />
+                      >
+                        <Box
+                          component="img"
+                          src={getImageUrl(f.url)}
+                          alt={f.descripcion || 'Foto'}
+                          loading="lazy"
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block',
+                          }}
+                        />
+                      </Box>
+                      <Box sx={{ p: 1 }}>
                       {editandoId === f.id ? (
-                        <Box sx={{ mt: 1 }}>
+                        <Box sx={{ mt: 0.5 }}>
                           <TextField
                             value={editDesc}
                             onChange={(e) => setEditDesc(e.target.value)}
@@ -333,6 +354,7 @@ const AdminFotos = () => {
                           />
                         </Box>
                       )}
+                      </Box>
                     </Paper>
                   ))}
                 </Box>
