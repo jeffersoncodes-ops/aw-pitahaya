@@ -79,7 +79,8 @@ const CarruselFotos = ({
           position: 'relative',
           borderRadius: 3,
           overflow: 'hidden',
-          height: { xs: 180, sm: 240, md: 280 },
+          aspectRatio: '16/9',
+          maxHeight: 400,
           bgcolor: '#1a1a1a',
         }}
       >
@@ -92,6 +93,7 @@ const CarruselFotos = ({
             width: '100%',
             height: '100%',
             objectFit: 'cover',
+            bgcolor: '#1a1a1a',
             animation: `${fadeIn} 0.6s ease`,
           }}
         />

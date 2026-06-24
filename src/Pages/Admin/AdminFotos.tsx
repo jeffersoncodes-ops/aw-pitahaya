@@ -95,11 +95,21 @@ const AdminFotos = () => {
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               {todasFotos.map((f) => (
                 <Paper key={f.id} variant="outlined" sx={{ width: 200, p: 1 }}>
-                  <img
-                    src={getImageUrl(f.url)}
-                    alt={f.descripcion || ''}
-                    style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 4 }}
-                  />
+                  <Box
+                    sx={{
+                      width: '100%',
+                      aspectRatio: '4/3',
+                      overflow: 'hidden',
+                      borderRadius: 1,
+                      bgcolor: '#1a1a1a',
+                    }}
+                  >
+                    <img
+                      src={getImageUrl(f.url)}
+                      alt={f.descripcion || ''}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </Box>
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -258,16 +268,21 @@ const AdminFotos = () => {
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
                   {fotosSubidas.map((f) => (
                     <Paper key={f.id} variant="outlined" sx={{ width: 180, p: 1 }}>
-                      <img
-                        src={getImageUrl(f.url)}
-                        alt={f.descripcion || ''}
-                        style={{
+                      <Box
+                        sx={{
                           width: '100%',
-                          height: 110,
-                          objectFit: 'cover',
-                          borderRadius: 4,
+                          aspectRatio: '4/3',
+                          overflow: 'hidden',
+                          borderRadius: 1,
+                          bgcolor: '#1a1a1a',
                         }}
-                      />
+                      >
+                        <img
+                          src={getImageUrl(f.url)}
+                          alt={f.descripcion || ''}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </Box>
                       {editandoId === f.id ? (
                         <Box sx={{ mt: 1 }}>
                           <TextField
