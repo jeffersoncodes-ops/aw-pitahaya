@@ -85,14 +85,14 @@ const CarruselFotos = ({
         }}
       >
         <Box
-          component="img"
-          src={getImageUrl(foto.url)}
-          alt={foto.descripcion || 'Foto'}
           key={foto.id}
           sx={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
+            backgroundImage: `url(${getImageUrl(foto.url)})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
             bgcolor: '#1a1a1a',
             animation: `${fadeIn} 0.6s ease`,
           }}

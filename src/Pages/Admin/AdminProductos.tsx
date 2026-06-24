@@ -25,6 +25,7 @@ import {
   EditDeleteActions,
 } from '../../components/AdminUI';
 import { useNotificar } from '../../components/Notificacion';
+import { getImageUrl } from '../../config/constants';
 
 const AdminProductos = () => {
   const { notificar } = useNotificar();
@@ -274,10 +275,16 @@ const AdminProductos = () => {
               )}
               {viewProd.fotografia_url && (
                 <Box
-                  component="img"
-                  src={viewProd.fotografia_url}
-                  alt={viewProd.nombre}
-                  sx={{ maxWidth: '100%', maxHeight: 300, borderRadius: 1, objectFit: 'cover' }}
+                  sx={{
+                    width: '100%',
+                    height: 200,
+                    borderRadius: 1,
+                    bgcolor: '#1a1a1a',
+                    backgroundImage: `url(${getImageUrl(viewProd.fotografia_url)})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                  }}
                 />
               )}
             </Box>

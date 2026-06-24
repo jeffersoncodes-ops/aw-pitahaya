@@ -99,17 +99,14 @@ const AdminFotos = () => {
                     sx={{
                       width: '100%',
                       aspectRatio: '4/3',
-                      overflow: 'hidden',
                       borderRadius: 1,
                       bgcolor: '#1a1a1a',
+                      backgroundImage: `url(${getImageUrl(f.url)})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
                     }}
-                  >
-                    <img
-                      src={getImageUrl(f.url)}
-                      alt={f.descripcion || ''}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  </Box>
+                  />
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -272,17 +269,14 @@ const AdminFotos = () => {
                         sx={{
                           width: '100%',
                           aspectRatio: '4/3',
-                          overflow: 'hidden',
                           borderRadius: 1,
                           bgcolor: '#1a1a1a',
+                          backgroundImage: `url(${getImageUrl(f.url)})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          backgroundRepeat: 'no-repeat',
                         }}
-                      >
-                        <img
-                          src={getImageUrl(f.url)}
-                          alt={f.descripcion || ''}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </Box>
+                      />
                       {editandoId === f.id ? (
                         <Box sx={{ mt: 1 }}>
                           <TextField
