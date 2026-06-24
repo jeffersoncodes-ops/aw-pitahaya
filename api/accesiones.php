@@ -21,6 +21,9 @@ try {
                a.latitude,
                a.longitude,
                a.elevation,
+               a.tecnico_id,
+               a.propietario_id,
+               a.donante_id,
                t.nombre              AS tecnico,
                p.nombre_productor    AS propietario
         FROM accesion a

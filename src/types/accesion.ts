@@ -12,6 +12,9 @@ export interface AccesionResumen {
   latitude: string;
   longitude: string;
   elevation: number;
+  tecnico_id: number;
+  propietario_id: number;
+  donante_id: number | null;
   tecnico: string;
   propietario: string;
 }
